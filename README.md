@@ -18,3 +18,12 @@
 
 - 在微信开发者工具中，选择导入项目目录：`miniprogram/`。
 - `appid`、`project.config.json`、`app.json` 均在该目录中，后续可直接开发和部署。
+
+
+## 常见问题排查（merge 后页面无变化）
+
+1. 确认 **Settings → Pages** 的 Source 是否为 **GitHub Actions**（推荐）或正确分支的 `/docs`。
+2. 若之前使用了其他分支/目录（如 `gh-pages` 或 `/root`），切换后需等待重新构建。
+3. 到 **Actions** 查看 `Deploy GitHub Pages (docs)` 是否执行成功。
+4. 强制刷新浏览器缓存（Windows: `Ctrl+F5`，macOS: `Cmd+Shift+R`）。
+5. 若访问的是仓库根地址，根目录 `index.html` 已做重定向到 `./docs/`。
