@@ -1,72 +1,100 @@
-const mockProfile = { userId: 'u_demo_001', weight: 68 };
-
-const mockMedicine = {
-  medicineId: 'm_001',
-  name: '舍曲林',
-  spec: '50mg*14片',
-  halfLife: 26,
-  xValue: 2
+const store = {
+  profile: { userId: 'u_demo_001', weight: 68 },
+  medicines: [
+    { id: 'm1', brand: '舍曲林', halfLife: 26, recoveryRate: 2, specs: [10, 20, 40] },
+    { id: 'm2', brand: '阿戈美拉汀', halfLife: 2.3, recoveryRate: 1.4, specs: [25] }
+  ],
+  records: [
+    {
+      medicineId: 'm1',
+      timestamp: '2026-03-27T08:30:00+08:00',
+      counts: { '20': 1, '40': 1 }
+    },
+    {
+      medicineId: 'm1',
+      timestamp: '2026-03-26T08:20:00+08:00',
+      counts: { '20': 2 }
+    },
+    {
+      medicineId: 'm2',
+      timestamp: '2026-03-25T20:15:00+08:00',
+      counts: { '25': 1 }
+    }
+  ]
 };
 
-const mockRecords = [
-  { dose: 50, timestamp: '2026-03-27T08:30:00+08:00' },
-  { dose: 50, timestamp: '2026-03-26T08:20:00+08:00' },
-  { dose: 25, timestamp: '2026-03-25T20:15:00+08:00' },
-  { dose: 50, timestamp: '2026-03-24T08:25:00+08:00' }
-];
+let editingMedicineId = null;
 
-function formatCNTime(date) {
-  const pad = (n) => `${n}`.padStart(2, '0');
+function page() {
+  return document.body.dataset.page;
+}
+
+function pad(n) {
+  return `${n}`.padStart(2, '0');
+}
+
+function formatDateTime(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function calculateStartConcentration(prevConc, dose, weight, xValue) {
-  return prevConc + (dose / weight) * xValue;
+function toDatetimeLocalValue(date = new Date()) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function decayConcentration(startConc, elapsedHours, halfLife) {
-  const factor = Math.pow(0.5, elapsedHours / halfLife);
-  return startConc * factor;
+function getMedicineById(id) {
+  return store.medicines.find((m) => m.id === id);
 }
 
-function hoursBetween(later, earlier) {
-  return Math.max(0, (later - earlier) / 3600000);
+function calcDoseByCounts(counts) {
+  return Object.entries(counts).reduce((sum, [spec, count]) => sum + Number(spec) * Number(count || 0), 0);
 }
 
-function concentrationAtTime(targetDate) {
-  const sorted = [...mockRecords]
+function calcExpectedRise(totalDose, weight, recoveryRate) {
+  if (weight <= 0) return 0;
+  return (totalDose / weight) * recoveryRate;
+}
+
+function calcConcentrationAt(targetDate) {
+  const sorted = [...store.records]
     .map((r) => ({ ...r, date: new Date(r.timestamp) }))
     .sort((a, b) => a.date - b.date);
 
-  let conc = 0;
+  let concentration = 0;
   let lastTime = null;
 
   for (const record of sorted) {
     if (record.date > targetDate) break;
 
+    const med = getMedicineById(record.medicineId);
+    if (!med) continue;
+
     if (lastTime) {
-      const elapsedBeforeDose = hoursBetween(record.date, lastTime);
-      conc = decayConcentration(conc, elapsedBeforeDose, mockMedicine.halfLife);
+      const elapsed = Math.max(0, (record.date - lastTime) / 3600000);
+      concentration *= Math.pow(0.5, elapsed / med.halfLife);
     }
 
-    conc = calculateStartConcentration(conc, record.dose, mockProfile.weight, mockMedicine.xValue);
+    const dose = calcDoseByCounts(record.counts);
+    const rise = calcExpectedRise(dose, store.profile.weight, med.recoveryRate);
+    concentration += rise;
     lastTime = record.date;
   }
 
   if (lastTime) {
-    const elapsedAfterLastDose = hoursBetween(targetDate, lastTime);
-    conc = decayConcentration(conc, elapsedAfterLastDose, mockMedicine.halfLife);
+    const lastMed = getMedicineById(sorted[sorted.length - 1].medicineId);
+    const elapsed = Math.max(0, (targetDate - lastTime) / 3600000);
+    concentration *= Math.pow(0.5, elapsed / (lastMed?.halfLife || 24));
   }
 
-  return Number(conc.toFixed(3));
+  return Number(concentration.toFixed(3));
 }
 
 function drawChart(labels, points) {
   const canvas = document.getElementById('concChart');
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const width = canvas.width;
   const height = canvas.height;
-  const pad = { left: 56, right: 20, top: 20, bottom: 34 };
+  const padArea = { left: 56, right: 20, top: 20, bottom: 34 };
 
   ctx.clearRect(0, 0, width, height);
 
@@ -74,32 +102,20 @@ function drawChart(labels, points) {
   const minY = 0;
 
   ctx.strokeStyle = '#e5e7eb';
-  ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i += 1) {
-    const y = pad.top + ((height - pad.top - pad.bottom) * i) / 4;
+    const y = padArea.top + ((height - padArea.top - padArea.bottom) * i) / 4;
     ctx.beginPath();
-    ctx.moveTo(pad.left, y);
-    ctx.lineTo(width - pad.right, y);
+    ctx.moveTo(padArea.left, y);
+    ctx.lineTo(width - padArea.right, y);
     ctx.stroke();
 
-    const value = (maxY - ((maxY - minY) * i) / 4).toFixed(2);
     ctx.fillStyle = '#6b7280';
     ctx.font = '12px sans-serif';
-    ctx.fillText(value, 8, y + 4);
+    ctx.fillText((maxY - ((maxY - minY) * i) / 4).toFixed(2), 8, y + 4);
   }
 
-  ctx.strokeStyle = '#93c5fd';
-  ctx.lineWidth = 1;
-  for (let i = 0; i < labels.length; i += 1) {
-    const x = pad.left + ((width - pad.left - pad.right) * i) / (labels.length - 1);
-    ctx.beginPath();
-    ctx.moveTo(x, pad.top);
-    ctx.lineTo(x, height - pad.bottom);
-    ctx.stroke();
-  }
-
-  const toX = (i) => pad.left + ((width - pad.left - pad.right) * i) / (labels.length - 1);
-  const toY = (v) => pad.top + ((maxY - v) / (maxY - minY)) * (height - pad.top - pad.bottom);
+  const toX = (i) => padArea.left + ((width - padArea.left - padArea.right) * i) / (labels.length - 1);
+  const toY = (v) => padArea.top + ((maxY - v) / (maxY - minY)) * (height - padArea.top - padArea.bottom);
 
   ctx.beginPath();
   points.forEach((v, i) => {
@@ -112,53 +128,250 @@ function drawChart(labels, points) {
   ctx.lineWidth = 3;
   ctx.stroke();
 
-  points.forEach((v, i) => {
-    const x = toX(i);
-    const y = toY(v);
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#1d4ed8';
-    ctx.fill();
-  });
-
-  ctx.fillStyle = '#4b5563';
-  ctx.font = '12px sans-serif';
   labels.forEach((label, i) => {
     const x = toX(i);
-    ctx.fillText(label, x - 10, height - 10);
+    ctx.fillStyle = '#4b5563';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(label, x - 12, height - 8);
   });
 }
 
-function fillHome() {
+function initHome() {
   const now = new Date();
-  const nowConc = concentrationAtTime(now);
+  const records = [...store.records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  const lastRecord = records[0];
+  const lastMedicine = lastRecord ? getMedicineById(lastRecord.medicineId) : null;
 
-  document.getElementById('nowTime').textContent = formatCNTime(now);
-  document.getElementById('weeklyDoseCount').textContent = `${mockRecords.length} 次`;
+  document.getElementById('nowTime').textContent = formatDateTime(now);
+  document.getElementById('weeklyDoseCount').textContent = `${store.records.length} 次`;
   document.getElementById('weeklyMissedCount').textContent = '1 次';
   document.getElementById('remainCount').textContent = '26 片';
+  document.getElementById('weightText').textContent = `体重 ${store.profile.weight} kg`;
 
-  const last = mockRecords[0];
-  document.getElementById('lastMedicine').textContent = mockMedicine.name;
-  document.getElementById('lastSpec').textContent = mockMedicine.spec;
-  document.getElementById('lastDose').textContent = `${last.dose} mg`;
-  document.getElementById('lastTime').textContent = formatCNTime(new Date(last.timestamp));
+  if (lastRecord && lastMedicine) {
+    const dose = calcDoseByCounts(lastRecord.counts);
+    const specText = Object.entries(lastRecord.counts)
+      .filter(([, c]) => Number(c) > 0)
+      .map(([spec, c]) => `${spec}mg×${c}`)
+      .join(' + ');
+    document.getElementById('lastMedicine').textContent = lastMedicine.brand;
+    document.getElementById('lastSpec').textContent = specText || '--';
+    document.getElementById('lastDose').textContent = `${dose} mg`;
+    document.getElementById('lastTime').textContent = formatDateTime(new Date(lastRecord.timestamp));
+    document.getElementById('halfLifeBadge').textContent = `半衰期 ${lastMedicine.halfLife}h`;
+  }
 
-  document.getElementById('currentConc').textContent = nowConc.toFixed(2);
-  document.getElementById('halfLifeBadge').textContent = `半衰期 ${mockMedicine.halfLife}h`;
-  document.getElementById('weightText').textContent = `体重 ${mockProfile.weight} kg`;
+  document.getElementById('currentConc').textContent = calcConcentrationAt(now).toFixed(3);
 
   const labels = [];
   const points = [];
   for (let i = 24; i >= 0; i -= 2) {
-    const t = new Date(now.getTime() - i * 3600000);
-    labels.push(`${t.getHours().toString().padStart(2, '0')}:00`);
-    points.push(concentrationAtTime(t));
+    const d = new Date(now.getTime() - i * 3600000);
+    labels.push(`${pad(d.getHours())}:00`);
+    points.push(calcConcentrationAt(d));
   }
   drawChart(labels, points);
+
+  setInterval(() => {
+    const n = new Date();
+    const timeNode = document.getElementById('nowTime');
+    if (timeNode) timeNode.textContent = formatDateTime(n);
+  }, 60000);
 }
 
-fillHome();
-setInterval(() => {
-  document.getElementById('nowTime').textContent = formatCNTime(new Date());
-}, 60000);
+function renderMedicineOptions() {
+  const select = document.getElementById('medicineSelect');
+  if (!select) return;
+
+  select.innerHTML = store.medicines
+    .map((m) => `<option value="${m.id}">${m.brand}</option>`)
+    .join('');
+}
+
+function renderSpecInputs(medicineId) {
+  const container = document.getElementById('specInputs');
+  if (!container) return;
+
+  const med = getMedicineById(medicineId);
+  if (!med) {
+    container.innerHTML = '<p class="muted">未找到药品规格</p>';
+    return;
+  }
+
+  container.innerHTML = med.specs
+    .map((spec) => `
+      <label>${spec}mg 数量
+        <input type="number" min="0" step="1" value="0" data-spec="${spec}" class="spec-count" />
+      </label>
+    `)
+    .join('');
+}
+
+function bindAddRecordCalc() {
+  const select = document.getElementById('medicineSelect');
+  const specContainer = document.getElementById('specInputs');
+
+  const recalc = () => {
+    const med = getMedicineById(select.value);
+    if (!med) return;
+
+    const counts = {};
+    specContainer.querySelectorAll('.spec-count').forEach((input) => {
+      counts[input.dataset.spec] = Number(input.value || 0);
+    });
+
+    const totalDose = calcDoseByCounts(counts);
+    const expectedRise = calcExpectedRise(totalDose, store.profile.weight, med.recoveryRate);
+
+    document.getElementById('totalDose').textContent = `${totalDose} mg`;
+    document.getElementById('currentWeight').textContent = `${store.profile.weight} kg`;
+    document.getElementById('currentRecoveryRate').textContent = String(med.recoveryRate);
+    document.getElementById('expectedRise').textContent = expectedRise.toFixed(3);
+  };
+
+  select.addEventListener('change', () => {
+    renderSpecInputs(select.value);
+    bindSpecChange(recalc);
+    recalc();
+  });
+
+  bindSpecChange(recalc);
+  recalc();
+}
+
+function bindSpecChange(recalc) {
+  document.querySelectorAll('.spec-count').forEach((input) => {
+    input.addEventListener('input', recalc);
+  });
+}
+
+function initAddRecord() {
+  const recordTime = document.getElementById('recordTime');
+  recordTime.value = toDatetimeLocalValue(new Date());
+
+  renderMedicineOptions();
+  const select = document.getElementById('medicineSelect');
+  renderSpecInputs(select.value);
+  bindAddRecordCalc();
+
+  document.getElementById('submitRecordBtn').addEventListener('click', () => {
+    alert('新增用药记录成功（mock，不接后端）');
+  });
+}
+
+function renderMedicineList() {
+  const list = document.getElementById('medicineList');
+  if (!list) return;
+
+  list.innerHTML = store.medicines
+    .map((m) => `
+      <article class="list-item">
+        <div class="list-head">
+          <strong>${m.brand}</strong>
+          <button class="small-btn" data-edit-id="${m.id}">编辑</button>
+        </div>
+        <div class="stats">
+          <div><span>半衰期</span><strong>${m.halfLife} h</strong></div>
+          <div><span>回收率</span><strong>${m.recoveryRate}</strong></div>
+          <div><span>规格</span><strong>${m.specs.join(' / ')} mg</strong></div>
+        </div>
+      </article>
+    `)
+    .join('');
+
+  list.querySelectorAll('[data-edit-id]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const med = getMedicineById(btn.dataset.editId);
+      if (!med) return;
+      editingMedicineId = med.id;
+      document.getElementById('medicineFormTitle').textContent = `编辑药品：${med.brand}`;
+      document.getElementById('medBrand').value = med.brand;
+      document.getElementById('medHalfLife').value = med.halfLife;
+      document.getElementById('medRecoveryRate').value = med.recoveryRate;
+      document.getElementById('medSpecs').value = med.specs.join(',');
+    });
+  });
+}
+
+function resetMedicineForm() {
+  editingMedicineId = null;
+  document.getElementById('medicineFormTitle').textContent = '新增药品';
+  document.getElementById('medBrand').value = '';
+  document.getElementById('medHalfLife').value = '';
+  document.getElementById('medRecoveryRate').value = '';
+  document.getElementById('medSpecs').value = '';
+}
+
+function initMedicineManage() {
+  renderMedicineList();
+
+  document.getElementById('saveMedicineBtn').addEventListener('click', () => {
+    const brand = document.getElementById('medBrand').value.trim();
+    const halfLife = Number(document.getElementById('medHalfLife').value);
+    const recoveryRate = Number(document.getElementById('medRecoveryRate').value);
+    const specs = document.getElementById('medSpecs').value
+      .split(',')
+      .map((x) => Number(x.trim()))
+      .filter((x) => Number.isFinite(x) && x > 0);
+
+    if (!brand || !halfLife || !recoveryRate || !specs.length) {
+      alert('请完整填写品牌、半衰期、回收率和规格');
+      return;
+    }
+
+    if (editingMedicineId) {
+      const target = getMedicineById(editingMedicineId);
+      target.brand = brand;
+      target.halfLife = halfLife;
+      target.recoveryRate = recoveryRate;
+      target.specs = specs;
+      alert('药品更新成功（mock）');
+    } else {
+      store.medicines.push({
+        id: `m_${Date.now()}`,
+        brand,
+        halfLife,
+        recoveryRate,
+        specs
+      });
+      alert('药品新增成功（mock）');
+    }
+
+    resetMedicineForm();
+    renderMedicineList();
+  });
+
+  document.getElementById('resetMedicineBtn').addEventListener('click', resetMedicineForm);
+}
+
+function initHistory() {
+  const list = document.getElementById('historyList');
+  if (!list) return;
+
+  const rows = [...store.records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  list.innerHTML = rows.map((r) => {
+    const med = getMedicineById(r.medicineId);
+    const dose = calcDoseByCounts(r.counts);
+    return `
+      <article class="list-item">
+        <div class="list-head"><strong>${med?.brand || '未知药品'}</strong><span>${formatDateTime(new Date(r.timestamp))}</span></div>
+        <div class="muted">剂量组合：${Object.entries(r.counts).map(([s, c]) => `${s}mg×${c}`).join(' + ')}</div>
+        <div class="muted">总剂量：${dose} mg</div>
+      </article>
+    `;
+  }).join('');
+}
+
+function initProfile() {
+  const n = document.getElementById('profileWeight');
+  if (n) n.textContent = String(store.profile.weight);
+}
+
+(function bootstrap() {
+  const p = page();
+  if (p === 'home') initHome();
+  if (p === 'add-record') initAddRecord();
+  if (p === 'medicine-manage') initMedicineManage();
+  if (p === 'history') initHistory();
+  if (p === 'profile') initProfile();
+})();
