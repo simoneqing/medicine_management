@@ -97,3 +97,55 @@
 4. **上传并测试**，调试代码和云函数，确保功能正常。
 5. **提交审核**，等待微信官方审核通过。
 6. **发布上线**，审核通过后，将小程序正式发布供用户使用。
+
+## ✅ 平台规则与开发逻辑校验（微信小程序）
+
+> 结论：当前 `index.html` 仅用于 **Web 原型预览**，不能直接作为微信小程序代码发布。正式开发必须使用微信小程序原生技术栈。
+
+### 1) 前端框架兼容性说明
+
+- 微信小程序前端应使用：`WXML` + `WXSS` + `JavaScript` + 页面 `JSON` 配置。
+- `Vue 3 / React` 生成的 Web 代码（如 `index.html` + 浏览器 DOM）**不直接兼容** 小程序运行时。
+- 若使用跨端框架（如 Taro/uni-app），也需最终编译为小程序产物后再在开发者工具内运行。
+
+### 2) 云开发能力映射
+
+- **云数据库**：存储 `users`、`medicines`、`medRecords` 等集合。
+- **云函数（Node.js）**：承担浓度计算、统计聚合、鉴权后写入等逻辑。
+- **云存储**：存放头像、药盒图片、处方图片等资源。
+
+### 3) 建议的小程序目录结构
+
+```text
+miniprogram/
+  app.js
+  app.json
+  app.wxss
+  pages/
+    home/
+      home.wxml
+      home.wxss
+      home.js
+      home.json
+    record-list/
+    record-add/
+    concentration-chart/
+    profile/
+cloudfunctions/
+  addMedicineRecord/
+  getWeeklyStats/
+  getLastRecord/
+  calculateConcentration/
+```
+
+### 4) 首页模块的小程序落地约束
+
+- Home 页需通过 `Page({ data, onLoad, ... })` 组织页面逻辑。
+- 图表可用小程序兼容图表库（如 `ec-canvas`）或 `canvas` 自绘；不能直接依赖浏览器专用 API。
+- 时间、时区、日期建议统一以时间戳存储并在展示层格式化，避免统计口径偏差。
+
+### 5) 发布与合规提醒
+
+- 仅将小程序编译产物提交审核，Web 原型不可替代小程序包。
+- 云函数涉及医疗相关信息时，需最小化采集并做好访问控制与日志审计。
+
