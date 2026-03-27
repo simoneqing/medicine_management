@@ -1,0 +1,36 @@
+<view class="container">
+  <view class="header">
+    <view class="header-title">用药管理 · 首页</view>
+    <view class="header-subtitle">本周坚持用药第 {{weeklyStats.streakDays}} 天，继续保持</view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">本周用药统计</view>
+    <view class="row"><text>已用药次数</text><text class="value">{{weeklyStats.totalDoses}} 次</text></view>
+    <view class="row"><text>漏服提醒</text><text class="value">{{weeklyStats.missedAlerts}} 次</text></view>
+    <view class="row"><text>剩余药量</text><text class="value">{{weeklyStats.remainPills}} 片</text></view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">最近一次用药</view>
+    <view wx:if="{{lastRecord}}">
+      <view class="row"><text>药品</text><text class="value">{{lastRecord.medicineName}}</text></view>
+      <view class="row"><text>剂量</text><text class="value">{{lastRecord.dose}} mg</text></view>
+      <view class="row"><text>时间</text><text class="value">{{lastRecord.timeLabel}}</text></view>
+      <view class="row"><text>当前浓度</text><text class="value">{{currentConcentration}}</text></view>
+    </view>
+    <view wx:else class="muted">暂无用药记录</view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">血药浓度（示意）</view>
+    <view class="muted">起始浓度 = 上一次残余浓度 + (用药剂量 / 体重) × x</view>
+    <view class="muted">每经过一个半衰期，浓度减半</view>
+  </view>
+
+  <view class="actions">
+    <button class="action primary" bindtap="handleAddRecord">新增用药记录</button>
+    <button class="action" bindtap="handleViewHistory">查看历史记录</button>
+    <button class="action" bindtap="handleViewProfile">个人信息</button>
+  </view>
+</view>
