@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>新增用药记录</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body data-page="add-record">
+  <main class="app">
+    <header class="topbar card">
+      <a class="text-link" href="./index.html">← 返回首页</a>
+      <h1>新增用药记录</h1>
+    </header>
+
+    <section class="card form-card">
+      <label>用药时间
+        <input type="datetime-local" id="recordTime" />
+      </label>
+
+      <label>药品品牌
+        <select id="medicineSelect"></select>
+      </label>
+
+      <div id="specInputs" class="spec-grid"></div>
+    </section>
+
+    <section class="card">
+      <h2>自动计算结果</h2>
+      <div class="stats">
+        <div><span>总剂量</span><strong id="totalDose">0 mg</strong></div>
+        <div><span>当前体重</span><strong id="currentWeight">-- kg</strong></div>
+        <div><span>回收率</span><strong id="currentRecoveryRate">--</strong></div>
+        <div><span>预计提升浓度</span><strong id="expectedRise">0.000</strong></div>
+      </div>
+      <p class="muted">预计提升浓度 = (总剂量 / 体重kg) × 回收率</p>
+    </section>
+
+    <button class="btn-primary" id="submitRecordBtn">提交用药记录</button>
+  </main>
+
+  <script src="./script.js"></script>
+</body>
+</html>
