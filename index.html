@@ -1,12 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medicine Management</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用药管理 - 网页原型预览</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <h1>Welcome to Medicine Management</h1>
-    <p>This is your homepage.</p>
+  <main class="app">
+    <header class="hero card">
+      <div>
+        <h1>用药管理</h1>
+        <p>微信小程序首页原型（GitHub Pages 预览版）</p>
+      </div>
+      <div class="now-time" id="nowTime">--:--</div>
+    </header>
+
+    <section class="grid two">
+      <article class="card">
+        <h2>本周用药统计</h2>
+        <div class="stats">
+          <div><span>用药次数</span><strong id="weeklyDoseCount">0 次</strong></div>
+          <div><span>漏服提醒</span><strong id="weeklyMissedCount">0 次</strong></div>
+          <div><span>剩余药量</span><strong id="remainCount">0 片</strong></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>最近一次用药</h2>
+        <div class="stats">
+          <div><span>药品</span><strong id="lastMedicine">--</strong></div>
+          <div><span>规格</span><strong id="lastSpec">--</strong></div>
+          <div><span>剂量</span><strong id="lastDose">--</strong></div>
+          <div><span>时间</span><strong id="lastTime">--</strong></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid one">
+      <article class="card">
+        <h2>当前时刻血药浓度</h2>
+        <p class="conc-value"><span id="currentConc">0.00</span> <small>mg/L（mock）</small></p>
+        <p class="muted">计算规则：起始浓度 = 上一次残余浓度 + (用药剂量 / 体重) × x；每经过一个半衰期浓度减半。</p>
+      </article>
+    </section>
+
+    <section class="grid one">
+      <article class="card">
+        <div class="card-head">
+          <h2>血药浓度随时间变化曲线（24h）</h2>
+          <span class="badge" id="halfLifeBadge">半衰期 --h</span>
+        </div>
+        <canvas id="concChart" width="900" height="300" aria-label="血药浓度曲线"></canvas>
+      </article>
+    </section>
+
+    <section class="grid three">
+      <a class="card action" href="#" aria-label="历史用药记录入口">
+        <h3>历史用药记录</h3>
+        <p>查看按日期/药品筛选的记录</p>
+      </a>
+      <a class="card action primary" href="#" aria-label="新增用药记录入口">
+        <h3>新增用药记录</h3>
+        <p>快速录入品牌、规格、剂量和时间</p>
+      </a>
+      <a class="card action" href="#" aria-label="个人信息入口">
+        <h3>个人信息（体重）</h3>
+        <p><span id="weightText">体重 -- kg</span></p>
+      </a>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
 </body>
 </html>
