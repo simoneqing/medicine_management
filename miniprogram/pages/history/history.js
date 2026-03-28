@@ -1,3 +1,5 @@
+const PROFILE_STORAGE_KEY = 'medicine_profile_mock_v1';
+
 function pad(n) { return `${n}`.padStart(2, '0'); }
 function toDateTimeInput(date) { return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`; }
 function formatDateTime(date) { return `${date.getMonth()+1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}`; }
@@ -31,11 +33,29 @@ Page({
   },
 
   onLoad(options) {
+    this.loadProfileFromStorage();
     const medicines = this.data.medicines;
     this.setData({ medicineOptions: medicines, formTime: toDateTimeInput(new Date()) });
     this.resetSpecInputs();
     this.refreshStatsAndList();
     if (options.openAdd === '1') this.openAddForm();
+  },
+
+  onShow() {
+    const oldWeight = this.data.profile.weight;
+    this.loadProfileFromStorage();
+    if (this.data.profile.weight !== oldWeight) {
+      this.refreshStatsAndList();
+      this.recalcForm();
+    }
+  },
+
+  loadProfileFromStorage() {
+    const cached = wx.getStorageSync(PROFILE_STORAGE_KEY);
+    if (!cached || typeof cached !== 'object') return;
+    const nextWeight = Number(cached.weight);
+    if (!Number.isFinite(nextWeight) || nextWeight <= 0 || nextWeight > 300) return;
+    this.setData({ profile: { ...this.data.profile, weight: Number(nextWeight.toFixed(1)) } });
   },
 
   switchFilter(e) { this.setData({ filterMode: e.currentTarget.dataset.mode }, this.refreshStatsAndList); },

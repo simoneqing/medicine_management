@@ -10,6 +10,7 @@ const store = {
     { medicineId: 'm2', timestamp: '2026-03-26T20:15:00+08:00', counts: { '100': 1 } }
   ]
 };
+const PROFILE_STORAGE_KEY = 'medicine_profile_mock_v1';
 
 let editingMedicineId = null;
 let homeChartMode = 'day';
@@ -25,6 +26,30 @@ function toDatetimeLocalValue(date = new Date()) { return `${date.getFullYear()}
 function getMedicineById(id) { return store.medicines.find((m) => m.id === id); }
 function calcDoseByCounts(counts) { return Object.entries(counts).reduce((sum, [spec, count]) => sum + Number(spec) * Number(count || 0), 0); }
 function calcExpectedRise(totalDose, weight, recoveryRate) { return weight <= 0 ? 0 : (totalDose / weight) * recoveryRate; }
+function normalizeWeight(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return null;
+  if (num <= 0 || num > 300) return null;
+  return Number(num.toFixed(1));
+}
+function loadProfileFromStorage() {
+  try {
+    const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    const nextWeight = normalizeWeight(parsed?.weight);
+    if (nextWeight !== null) store.profile.weight = nextWeight;
+  } catch (e) {
+    // ignore invalid mock cache
+  }
+}
+function saveProfileToStorage() {
+  try {
+    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(store.profile));
+  } catch (e) {
+    // ignore storage errors in prototype
+  }
+}
 
 function setStatus(id, text, type = 'info') {
   const el = document.getElementById(id);
@@ -582,10 +607,51 @@ function initHistory() {
 
 function initProfile() {
   const n = document.getElementById('profileWeight');
-  if (n) n.textContent = String(store.profile.weight);
+  const input = document.getElementById('profileWeightInput');
+  const saveBtn = document.getElementById('saveWeightBtn');
+  if (!n || !input || !saveBtn) return;
+
+  const renderCurrentWeight = () => {
+    n.textContent = String(store.profile.weight);
+    input.value = String(store.profile.weight);
+  };
+
+  const showProfileStatus = (text, type = 'info') => {
+    setStatus('profileStatus', text, type);
+  };
+
+  renderCurrentWeight();
+  showProfileStatus('请填写体重后点击“保存体重”。');
+
+  saveBtn.addEventListener('click', () => {
+    const trimmed = input.value.trim();
+    if (!trimmed) {
+      showProfileStatus('体重不能为空，请输入有效数字。', 'error');
+      return;
+    }
+    const nextWeight = normalizeWeight(trimmed);
+    if (nextWeight === null) {
+      showProfileStatus('体重需为大于 0 且不超过 300 的数字（支持小数）。', 'error');
+      return;
+    }
+
+    const originalText = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = '保存中...';
+
+    setTimeout(() => {
+      store.profile.weight = nextWeight;
+      saveProfileToStorage();
+      renderCurrentWeight();
+      showProfileStatus('保存成功：当前体重已更新，并将用于后续计算。');
+      saveBtn.disabled = false;
+      saveBtn.textContent = originalText;
+    }, 500);
+  });
 }
 
 (function bootstrap() {
+  loadProfileFromStorage();
   buildBottomNav();
   if (page() === 'home') initHome();
   if (page() === 'add-record') initAddRecord();

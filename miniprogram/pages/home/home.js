@@ -1,3 +1,5 @@
+const PROFILE_STORAGE_KEY = 'medicine_profile_mock_v1';
+
 function calcDoseByCounts(counts) {
   return Object.entries(counts).reduce((sum, [spec, count]) => sum + Number(spec) * Number(count || 0), 0);
 }
@@ -51,9 +53,28 @@ Page({
   },
 
   onLoad() {
+    this.loadProfileFromStorage();
     this.buildStats();
     this.buildChartData('day');
     this.drawChart();
+  },
+
+  onShow() {
+    const oldWeight = this.data.profile.weight;
+    this.loadProfileFromStorage();
+    if (this.data.profile.weight !== oldWeight) {
+      this.buildStats();
+      this.buildChartData(this.data.chartMode);
+      this.drawChart();
+    }
+  },
+
+  loadProfileFromStorage() {
+    const cached = wx.getStorageSync(PROFILE_STORAGE_KEY);
+    if (!cached || typeof cached !== 'object') return;
+    const nextWeight = Number(cached.weight);
+    if (!Number.isFinite(nextWeight) || nextWeight <= 0 || nextWeight > 300) return;
+    this.setData({ profile: { ...this.data.profile, weight: Number(nextWeight.toFixed(1)) } });
   },
 
   switchToDay() {
@@ -176,5 +197,5 @@ Page({
 
   handleAddRecord() { wx.navigateTo({ url: '/pages/history/history?openAdd=1' }); },
   handleViewHistory() { wx.navigateTo({ url: '/pages/history/history' }); },
-  handleViewProfile() { wx.showToast({ title: '请接入个人信息页', icon: 'none' }); }
+  handleViewProfile() { wx.navigateTo({ url: '/pages/profile/profile' }); }
 });

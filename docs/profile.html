@@ -17,7 +17,16 @@
     <section class="card">
       <h2>当前体重</h2>
       <p class="conc-value"><span id="profileWeight">--</span> <small>kg</small></p>
-      <p class="status-text">当前为 mock 数据展示，可在真实版本接入用户资料编辑。</p>
+      <p class="muted">体重会影响预计提升浓度与相关计算，请保持更新。</p>
+    </section>
+
+    <section class="card form-card">
+      <h2>体重管理</h2>
+      <label for="profileWeightInput">体重（kg）
+        <input id="profileWeightInput" type="number" inputmode="decimal" min="0.1" max="300" step="0.1" placeholder="例如：68.5" />
+      </label>
+      <button id="saveWeightBtn" class="btn-primary" type="button">保存体重</button>
+      <p id="profileStatus" class="status-text">请输入 0~300 之间的有效体重值（支持 1 位小数）。</p>
     </section>
   </main>
 

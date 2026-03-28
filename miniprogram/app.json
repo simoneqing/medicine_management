@@ -2,7 +2,8 @@
   "pages": [
     "pages/home/home",
     "pages/medicine-manage/medicine-manage",
-    "pages/history/history"
+    "pages/history/history",
+    "pages/profile/profile"
   ],
   "window": {
     "navigationBarTitleText": "用药管理",
