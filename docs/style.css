@@ -355,3 +355,15 @@ input, select {
 @media (max-width: 960px) {
   .custom-date-wrap { grid-template-columns: 1fr; }
 }
+
+
+.drawer-head { display:flex; justify-content: space-between; align-items:center; margin-bottom: 8px; }
+.icon-close { border:none; background: transparent; color:#94a3b8; font-size: 18px; padding: 6px 8px; }
+.spec-header { font-size: 13px; color:#475569; margin: 8px 0; }
+.spec-list { display:flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
+.spec-item { display:flex; justify-content: space-between; align-items:center; border:1px solid #e2e8f0; border-radius: 12px; padding: 10px; }
+.spec-label { font-weight: 600; color:#0f172a; }
+.stepper { display:flex; align-items:center; gap: 8px; }
+.step-btn { width: 30px; height: 30px; border:none; border-radius: 8px; background:#dbeafe; color:#1d4ed8; font-size:18px; }
+.step-count { min-width: 24px; text-align:center; font-weight:700; }
+.drawer-footer { position: sticky; bottom: 0; background: #fff; padding-top: 8px; }

@@ -55,9 +55,9 @@
 
   <section class="drawer hidden" id="historyAddDrawer">
     <div class="drawer-panel">
-      <div class="list-head">
+      <div class="drawer-head">
         <h2>新增用药记录</h2>
-        <button id="closeAddDrawer" class="btn-ghost" type="button">关闭</button>
+        <button id="closeAddDrawer" class="icon-close" type="button">✕</button>
       </div>
       <label>用药时间
         <input type="datetime-local" id="recordTime" />
@@ -65,20 +65,21 @@
       <label>药品品牌
         <select id="medicineSelect"></select>
       </label>
-      <div id="specInputs" class="spec-grid"></div>
+      <div class="spec-header">本次使用规格（未使用的规格保持为 0）</div>
+      <div id="specInputs" class="spec-list"></div>
 
       <div class="card compact-card">
         <div class="stats">
           <div><span>总剂量</span><strong id="totalDose">0</strong></div>
           <div><span>体重</span><strong id="currentWeight">-- kg</strong></div>
           <div><span>回收率</span><strong id="currentRecoveryRate">--</strong></div>
-          <div><span>预计提升浓度</span><strong id="expectedRise">0.000</strong></div>
+          <div><span>预计提升浓度</span><strong id="expectedRise">0.0%</strong></div>
         </div>
         <p class="muted" id="calcDetail">计算明细：预计提升浓度 =（总剂量 / 体重）× 回收率</p>
       </div>
 
       <p class="status-text" id="recordStatus">请填写规格数量后提交。</p>
-      <button class="btn-primary" id="submitRecordBtn" type="button">提交记录</button>
+      <div class="drawer-footer"><button class="btn-primary" id="submitRecordBtn" type="button">提交记录</button></div>
     </div>
   </section>
 

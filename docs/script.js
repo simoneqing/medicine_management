@@ -184,10 +184,32 @@ function renderSpecInputs(medicineId) {
     container.innerHTML = '<p class="muted">未找到药品规格</p>';
     return;
   }
-  container.innerHTML = med.specs.map((spec) => `<label>${spec} 数量<input type="number" min="0" step="1" value="0" data-spec="${spec}" class="spec-count" /></label>`).join('');
+
+  container.innerHTML = med.specs.map((spec) => `
+    <div class="spec-item">
+      <div class="spec-label">${spec} ${med.unit}</div>
+      <div class="stepper">
+        <button class="step-btn" type="button" data-spec="${spec}" data-op="minus">-</button>
+        <span class="step-count" data-count-for="${spec}">0</span>
+        <button class="step-btn" type="button" data-spec="${spec}" data-op="plus">+</button>
+      </div>
+    </div>
+  `).join('');
 }
 
-function bindSpecChange(recalc) { document.querySelectorAll('.spec-count').forEach((i) => i.addEventListener('input', recalc)); }
+function bindSpecChange(recalc) {
+  document.querySelectorAll('[data-op]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const spec = btn.dataset.spec;
+      const countEl = document.querySelector(`[data-count-for="${spec}"]`);
+      if (!countEl) return;
+      let n = Number(countEl.textContent || 0);
+      n = btn.dataset.op === 'plus' ? n + 1 : Math.max(0, n - 1);
+      countEl.textContent = String(n);
+      recalc();
+    });
+  });
+}
 
 function bindAddRecordCalc() {
   const select = document.getElementById('medicineSelect');
@@ -429,7 +451,7 @@ function renderHistoryList() {
         </div>
         <div class="muted">规格组合：${Object.entries(r.counts).map(([s, c]) => `${s}${med?.unit || ''}×${c}`).join(' + ')}</div>
         <div class="muted">总剂量：${dose.toFixed(2)} ${med?.unit || ''}</div>
-        <div class="muted">预计提升浓度：${rise.toFixed(3)}</div>
+        <div class="muted">预计提升浓度：${rise.toFixed(2)}%</div>
       </article>
     `;
   }).join('');
@@ -459,35 +481,35 @@ function initHistoryRecordForm() {
     const med = getMedicineById(select.value);
     if (!med) return;
     const counts = {};
-    document.querySelectorAll('#specInputs .spec-count').forEach((input) => {
-      counts[input.dataset.spec] = Number(input.value || 0);
+    document.querySelectorAll('#specInputs [data-count-for]').forEach((el) => {
+      counts[el.dataset.countFor] = Number(el.textContent || 0);
     });
     const total = calcDoseByCounts(counts);
     const rise = calcExpectedRise(total, store.profile.weight, med.recoveryRate);
     document.getElementById('totalDose').textContent = `${total.toFixed(2)} ${med.unit}`;
     document.getElementById('currentWeight').textContent = `${store.profile.weight} kg`;
     document.getElementById('currentRecoveryRate').textContent = String(med.recoveryRate);
-    document.getElementById('expectedRise').textContent = rise.toFixed(3);
-    document.getElementById('calcDetail').textContent = `计算明细：(${total.toFixed(2)} / ${store.profile.weight}) × ${med.recoveryRate} = ${rise.toFixed(3)}`;
+    document.getElementById('expectedRise').textContent = `${rise.toFixed(2)}%`;
+    document.getElementById('calcDetail').textContent = `计算明细：(${total.toFixed(2)} / ${store.profile.weight}) × ${med.recoveryRate} = ${rise.toFixed(2)}%`;
     submitBtn.disabled = total <= 0;
     setStatus('recordStatus', total > 0 ? '可提交：计算完成。' : '请填写规格数量后提交。');
   };
 
   select.addEventListener('change', () => {
     renderSpecInputs(select.value);
-    document.querySelectorAll('#specInputs .spec-count').forEach((input) => input.addEventListener('input', recalc));
+    bindSpecChange(recalc);
     recalc();
   });
 
-  document.querySelectorAll('#specInputs .spec-count').forEach((input) => input.addEventListener('input', recalc));
+  bindSpecChange(recalc);
   recalc();
 
   submitBtn.addEventListener('click', () => {
     const med = getMedicineById(select.value);
     const counts = {};
-    document.querySelectorAll('#specInputs .spec-count').forEach((input) => {
-      const n = Number(input.value || 0);
-      if (n > 0) counts[input.dataset.spec] = n;
+    document.querySelectorAll('#specInputs [data-count-for]').forEach((el) => {
+      const n = Number(el.textContent || 0);
+      if (n > 0) counts[el.dataset.countFor] = n;
     });
 
     const timestamp = document.getElementById('recordTime').value;

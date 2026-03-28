@@ -21,3 +21,10 @@
 .spec-row { display:grid; grid-template-columns:1fr 1fr; gap:8rpx; margin-bottom:8rpx; align-items:center; }
 .compact { margin:10rpx 0; }
 .fab { position:fixed; right:20rpx; bottom:30rpx; width:90rpx; height:90rpx; border-radius:45rpx; background:#2563eb; color:#fff; font-size:48rpx; border:none; }
+
+
+.drawer-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8rpx; }
+.close-text { color:#94a3b8; font-size:24rpx; }
+.stepper { display:flex; align-items:center; gap:8rpx; }
+.count { min-width: 34rpx; text-align:center; font-weight:700; }
+.drawer-footer { position: sticky; bottom: 0; background:#fff; padding-top: 10rpx; }

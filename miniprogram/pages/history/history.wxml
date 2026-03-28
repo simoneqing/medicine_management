@@ -42,17 +42,22 @@
 
   <view wx:if="{{showAddForm}}" class="drawer">
     <view class="drawer-panel">
-      <view class="list-head"><view class="label">新增用药记录</view><button size="mini" bindtap="closeAddForm">关闭</button></view>
+      <view class="drawer-head"><view class="label">新增用药记录</view><text class="close-text" bindtap="closeAddForm">关闭</text></view>
       <view class="field"><text>用药时间</text><input type="datetime-local" value="{{formTime}}" bindinput="onFormTime"/></view>
       <view class="field"><text>药品品牌</text>
         <picker range="{{medicineOptions}}" range-key="brand" value="{{selectedMedicineIndex}}" bindchange="onMedicineChange">
           <view class="picker">{{medicineOptions[selectedMedicineIndex].brand}}</view>
         </picker>
       </view>
+      <view class="muted">本次使用规格（未使用的规格保持为 0）</view>
       <block wx:for="{{specInputs}}" wx:key="spec">
         <view class="spec-row">
-          <text>{{item.spec}}{{item.unit}}</text>
-          <input type="number" value="{{item.count}}" data-spec="{{item.spec}}" bindinput="onSpecCountInput"/>
+          <text>{{item.spec}} {{item.unit}}</text>
+          <view class="stepper">
+            <button size="mini" data-index="{{index}}" data-op="minus" bindtap="stepSpec">-</button>
+            <text class="count">{{item.count}}</text>
+            <button size="mini" data-index="{{index}}" data-op="plus" bindtap="stepSpec">+</button>
+          </view>
         </view>
       </block>
 
@@ -60,11 +65,11 @@
         <view class="muted">总剂量：{{calc.totalDose}}</view>
         <view class="muted">当前体重：{{calc.weight}}</view>
         <view class="muted">回收率：{{calc.recoveryRate}}</view>
-        <view class="muted">预计提升浓度：{{calc.expectedRise}}</view>
+        <view class="muted">预计提升浓度：{{calc.expectedRise}}%</view>
         <view class="muted">计算明细：{{calc.detail}}</view>
       </view>
 
-      <button type="primary" loading="{{submitting}}" bindtap="submitRecord">{{submitting ? '提交中...' : '提交记录'}}</button>
+      <view class="drawer-footer"><button type="primary" loading="{{submitting}}" bindtap="submitRecord">{{submitting ? '提交中...' : '提交记录'}}</button></view>
     </view>
   </view>
 
