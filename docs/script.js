@@ -27,7 +27,9 @@ function getMedicineById(id) { return store.medicines.find((m) => m.id === id); 
 function calcDoseByCounts(counts) { return Object.entries(counts).reduce((sum, [spec, count]) => sum + Number(spec) * Number(count || 0), 0); }
 function calcExpectedRise(totalDose, weight, recoveryRate) { return weight <= 0 ? 0 : (totalDose / weight) * recoveryRate; }
 function normalizeWeight(value) {
-  const num = Number(value);
+  const text = `${value ?? ''}`.trim();
+  if (!/^\d+(\.\d)?$/.test(text)) return null;
+  const num = Number(text);
   if (!Number.isFinite(num)) return null;
   if (num <= 0 || num > 300) return null;
   return Number(num.toFixed(1));
@@ -616,14 +618,38 @@ function initProfile() {
     input.value = String(store.profile.weight);
   };
 
+  const syncSaveButtonState = () => {
+    const valid = normalizeWeight(input.value) !== null;
+    saveBtn.disabled = !valid;
+    return valid;
+  };
+
   const showProfileStatus = (text, type = 'info') => {
     setStatus('profileStatus', text, type);
   };
 
   renderCurrentWeight();
-  showProfileStatus('请填写体重后点击“保存体重”。');
+  syncSaveButtonState();
+  showProfileStatus('请输入大于 0 且不超过 300 的数字（最多 1 位小数）。');
+
+  input.addEventListener('input', () => {
+    const raw = input.value.trim();
+    if (!raw) {
+      showProfileStatus('体重不能为空，请输入有效数字。', 'error');
+      syncSaveButtonState();
+      return;
+    }
+    if (normalizeWeight(raw) === null) {
+      showProfileStatus('输入不合法：仅支持 >0 且 <=300，最多 1 位小数。', 'error');
+      syncSaveButtonState();
+      return;
+    }
+    syncSaveButtonState();
+    showProfileStatus('输入合法，可点击“保存体重”。');
+  });
 
   saveBtn.addEventListener('click', () => {
+    if (saveBtn.disabled) return;
     const trimmed = input.value.trim();
     if (!trimmed) {
       showProfileStatus('体重不能为空，请输入有效数字。', 'error');
@@ -646,6 +672,7 @@ function initProfile() {
       showProfileStatus('保存成功：当前体重已更新，并将用于后续计算。');
       saveBtn.disabled = false;
       saveBtn.textContent = originalText;
+      syncSaveButtonState();
     }, 500);
   });
 }

@@ -20,7 +20,7 @@
       />
       <text class="unit">kg</text>
     </view>
-    <button class="save-btn" type="primary" loading="{{saving}}" disabled="{{saving}}" bindtap="saveWeight">
+    <button class="save-btn" type="primary" loading="{{saving}}" disabled="{{saving || !canSave}}" bindtap="saveWeight">
       {{saving ? '保存中...' : '保存体重'}}
     </button>
     <view class="status {{statusType === 'error' ? 'error' : ''}}">{{statusText}}</view>
