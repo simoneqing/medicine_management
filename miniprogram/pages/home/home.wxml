@@ -1,31 +1,39 @@
 <view class="container">
   <view class="header">
     <view class="header-title">用药管理 · 首页</view>
-    <view class="header-subtitle">本周坚持用药第 {{weeklyStats.streakDays}} 天，继续保持</view>
+    <view class="header-subtitle">单病种模型：所有品牌记录统一累计浓度</view>
   </view>
 
-  <view class="card">
-    <view class="card-title">本周用药统计</view>
-    <view class="row"><text>已用药次数</text><text class="value">{{weeklyStats.totalDoses}} 次</text></view>
-    <view class="row"><text>漏服提醒</text><text class="value">{{weeklyStats.missedAlerts}} 次</text></view>
-    <view class="row"><text>剩余药量</text><text class="value">{{weeklyStats.remainPills}} 片</text></view>
-  </view>
-
-  <view class="card">
-    <view class="card-title">最近一次用药</view>
-    <view wx:if="{{lastRecord}}">
-      <view class="row"><text>药品</text><text class="value">{{lastRecord.medicineName}}</text></view>
-      <view class="row"><text>剂量</text><text class="value">{{lastRecord.dose}} mg</text></view>
-      <view class="row"><text>时间</text><text class="value">{{lastRecord.timeLabel}}</text></view>
-      <view class="row"><text>当前浓度</text><text class="value">{{currentConcentration}}</text></view>
+  <view class="grid-two">
+    <view class="card">
+      <view class="card-title">本周用药统计</view>
+      <view class="row"><text>用药次数</text><text class="value">{{weeklyStats.count}} 次</text></view>
+      <view class="row"><text>总剂量</text><text class="value">{{weeklyStats.totalDose}} mg</text></view>
     </view>
-    <view wx:else class="muted">暂无用药记录</view>
+
+    <view class="card">
+      <view class="card-title">本月用药统计</view>
+      <view class="row"><text>用药次数</text><text class="value">{{monthlyStats.count}} 次</text></view>
+      <view class="row"><text>总剂量</text><text class="value">{{monthlyStats.totalDose}} mg</text></view>
+    </view>
   </view>
 
   <view class="card">
-    <view class="card-title">血药浓度（示意）</view>
-    <view class="muted">起始浓度 = 上一次残余浓度 + (用药剂量 / 体重) × x</view>
-    <view class="muted">每经过一个半衰期，浓度减半</view>
+    <view class="card-title">当前血药浓度（统一累计）</view>
+    <view class="conc">{{currentConcentration}} %</view>
+    <view class="muted">所有品牌药物记录统一累计到一个血药浓度模型</view>
+  </view>
+
+  <view class="card">
+    <view class="card-head">
+      <view class="card-title">血药浓度曲线</view>
+      <view class="tabs">
+        <view class="tab {{chartMode==='day' ? 'active' : ''}}" bindtap="switchToDay">当天</view>
+        <view class="tab {{chartMode==='week' ? 'active' : ''}}" bindtap="switchToWeek">一周</view>
+      </view>
+    </view>
+    <canvas type="2d" id="chartCanvas" class="chart"></canvas>
+    <view class="muted">纵坐标固定 0%~120%</view>
   </view>
 
   <view class="actions">

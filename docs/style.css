@@ -294,3 +294,8 @@ input, select {
     gap: 10px;
   }
 }
+
+
+.segmented { display: inline-flex; border: 1px solid #d1d5db; border-radius: 999px; overflow: hidden; }
+.seg-btn { border: none; background: #fff; color: #6b7280; padding: 6px 12px; font-size: 12px; }
+.seg-btn.active { background: #2563eb; color: #fff; }
