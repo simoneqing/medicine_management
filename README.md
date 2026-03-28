@@ -11,7 +11,7 @@
 1. 打开仓库 **Settings** → **Pages**。
 2. Build and deployment 选择 **Deploy from a branch**。
 3. Branch 选择你发布的分支（如 `main`）。
-4. Folder 选择 **`/docs`**。
+4. 若使用 **GitHub Actions** 发布，无需选择 `/docs`，工作流会发布仓库内容并通过根目录 `index.html` 跳转到 `docs/`。
 5. 保存后等待 Pages 构建完成。
 
 ## 微信开发者工具打开方式
