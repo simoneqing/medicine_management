@@ -1,0 +1,48 @@
+<view class="container">
+  <view class="card intro">
+    <view class="title">药品维护</view>
+    <view class="muted">同品牌下不同规格共用半衰期、回收率和规格单位（默认 IU）</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">{{editingId ? '编辑药品' : '新增药品'}}</view>
+    <view class="field"><text>品牌名称</text><input value="{{form.brand}}" data-key="brand" bindinput="onInput" placeholder="例如：果纳芬"/></view>
+    <view class="field"><text>半衰期（小时）</text><input type="number" value="{{form.halfLife}}" data-key="halfLife" bindinput="onInput"/></view>
+    <view class="field"><text>回收率</text><input type="number" value="{{form.recoveryRate}}" data-key="recoveryRate" bindinput="onInput"/></view>
+    <view class="field"><text>规格单位（默认 IU）</text><input value="{{form.unit}}" data-key="unit" bindinput="onInput"/></view>
+
+    <view class="list-head">
+      <text>规格列表（数值）</text>
+      <button size="mini" bindtap="addSpec">+ 规格</button>
+    </view>
+    <block wx:for="{{form.specs}}" wx:key="index">
+      <view class="spec-row">
+        <input type="number" value="{{item}}" data-index="{{index}}" bindinput="onSpecInput"/>
+        <button size="mini" data-index="{{index}}" bindtap="removeSpec">删除</button>
+      </view>
+    </block>
+
+    <view class="actions">
+      <button type="primary" bindtap="saveMedicine">保存</button>
+      <button bindtap="resetForm">清空</button>
+    </view>
+    <view class="status">{{statusText}}</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">药品列表</view>
+    <block wx:for="{{medicines}}" wx:key="id">
+      <view class="item">
+        <view class="item-head">
+          <text class="brand">{{item.brand}}</text>
+          <button size="mini" data-id="{{item.id}}" bindtap="editMedicine">编辑</button>
+        </view>
+        <view class="muted">同品牌下不同规格共用半衰期、回收率与规格单位</view>
+        <view class="kv"><text>半衰期</text><text>{{item.halfLife}} h</text></view>
+        <view class="kv"><text>回收率</text><text>{{item.recoveryRate}}</text></view>
+        <view class="kv"><text>规格单位</text><text>{{item.unit}}</text></view>
+        <view class="kv"><text>规格列表</text><text>{{item.specText}}</text></view>
+      </view>
+    </block>
+  </view>
+</view>

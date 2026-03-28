@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用药管理 - 首页预览</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body data-page="home">
+  <main class="app">
+    <header class="hero card">
+      <div>
+        <p class="eyebrow">Medication Demo</p>
+        <h1>用药管理</h1>
+        <p>网页原型（GitHub Pages）</p>
+      </div>
+      <div class="now-time" id="nowTime">--:--</div>
+    </header>
+
+    <section class="grid two">
+      <article class="card">
+        <h2>本周用药统计</h2>
+        <div class="stats">
+          <div><span>用药次数</span><strong id="weeklyDoseCount">0 次</strong></div>
+          <div><span>总剂量</span><strong id="weeklyDoseTotal">0 mg</strong></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>本月用药统计</h2>
+        <div class="stats">
+          <div><span>用药次数</span><strong id="monthlyDoseCount">0 次</strong></div>
+          <div><span>总剂量</span><strong id="monthlyDoseTotal">0 mg</strong></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid one">
+      <article class="card highlight-card">
+        <h2>当前血药浓度（统一累计）</h2>
+        <p class="conc-value"><span id="currentConc">0.0</span> <small>%（mock）</small></p>
+        <p class="muted">当前阶段按单一疾病模型，将所有品牌药物记录累计到同一血药浓度中。</p>
+      </article>
+    </section>
+
+    <section class="grid one">
+      <article class="card">
+        <div class="card-head">
+          <h2>血药浓度曲线</h2>
+          <div class="segmented">
+            <button id="tabDay" class="seg-btn active" type="button">当天</button>
+            <button id="tabWeek" class="seg-btn" type="button">一周</button>
+          </div>
+        </div>
+        <canvas id="concChart" width="900" height="320" aria-label="血药浓度曲线"></canvas>
+        <p class="muted">纵坐标固定 0%~120%，曲线按半衰期衰减并做平滑采样。</p>
+      </article>
+    </section>
+
+    <section class="grid four">
+      <a class="card action" href="./history.html"><h3>历史记录</h3><p>查看所有记录与剂量明细</p></a>
+      <a class="card action primary" href="./add-record.html"><h3>新增记录</h3><p>按药品规格录入，自动计算剂量</p></a>
+      <a class="card action" href="./medicine-manage.html"><h3>药品维护</h3><p>维护半衰期、回收率、规格</p></a>
+      <a class="card action" href="./profile.html"><h3>个人信息</h3><p><span id="weightText">体重 -- kg</span></p></a>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" id="bottomNav"></nav>
+  <script src="./script.js"></script>
+</body>
+</html>
