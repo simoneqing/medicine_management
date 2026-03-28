@@ -28,7 +28,7 @@ Page({
     selectedMedicineIndex: 0,
     medicineOptions: [],
     specInputs: [],
-    calc: { totalDose: '0', weight: '68 kg', recoveryRate: '0', expectedRise: '0.000', detail: '' },
+    calc: { totalDose: '0', weight: '68 kg', recoveryRate: '0', expectedRise: '0', detail: '' },
     lastAddedId: ''
   },
 
@@ -88,7 +88,7 @@ Page({
       .map((r) => {
         const med = this.data.medicines.find((m) => m.id === r.medicineId) || {};
         const totalDose = calcDoseByCounts(r.counts);
-        const rise = calcExpectedRise(totalDose, this.data.profile.weight, med.recoveryRate || 0);
+        const rise = Math.round(calcExpectedRise(totalDose, this.data.profile.weight, med.recoveryRate || 0));
         return {
           ...r,
           isNew: r.id === this.data.lastAddedId,
@@ -96,7 +96,7 @@ Page({
           brand: med.brand || '未知药品',
           specText: Object.entries(r.counts).map(([s,c]) => `${s}${med.unit||''}×${c}`).join(' + '),
           totalDose: `${totalDose.toFixed(2)} ${med.unit||''}`,
-          expectedRise: `${rise.toFixed(2)}%`
+          expectedRise: `${rise}%`
         };
       });
 
@@ -132,14 +132,14 @@ Page({
     const counts = {};
     this.data.specInputs.forEach((i) => { counts[i.spec] = i.count; });
     const totalDose = calcDoseByCounts(counts);
-    const rise = calcExpectedRise(totalDose, this.data.profile.weight, med.recoveryRate);
+    const rise = Math.round(calcExpectedRise(totalDose, this.data.profile.weight, med.recoveryRate));
     this.setData({
       calc: {
         totalDose: `${totalDose.toFixed(2)} ${med.unit}`,
         weight: `${this.data.profile.weight} kg`,
         recoveryRate: `${med.recoveryRate}`,
-        expectedRise: rise.toFixed(2),
-        detail: `(${totalDose.toFixed(2)} / ${this.data.profile.weight}) × ${med.recoveryRate} = ${rise.toFixed(2)}%`
+        expectedRise: String(rise),
+        detail: `(${totalDose.toFixed(2)} / ${this.data.profile.weight}) × ${med.recoveryRate} ≈ ${rise}%`
       }
     });
   },

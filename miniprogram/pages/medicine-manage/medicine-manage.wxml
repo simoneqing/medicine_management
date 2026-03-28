@@ -43,7 +43,6 @@
           <button size="mini" data-id="{{item.id}}" bindtap="editMedicine">编辑</button>
         </view>
         <view class="spec-main">{{item.specText}}</view>
-        <view class="muted">同品牌下不同规格共用半衰期、回收率系数与规格单位</view>
         <view class="kv"><text>半衰期</text><text>{{item.halfLife}} h</text></view>
         <view class="kv"><text>回收率系数（浓度换算）</text><text>{{item.recoveryRate}}</text></view>
         <view class="kv"><text>规格单位</text><text>{{item.unit}}</text></view>

@@ -279,12 +279,12 @@ function bindAddRecordCalc() {
     const counts = {};
     specContainer.querySelectorAll('.spec-count').forEach((input) => { counts[input.dataset.spec] = Number(input.value || 0); });
     const totalDose = calcDoseByCounts(counts);
-    const expectedRise = calcExpectedRise(totalDose, store.profile.weight, med.recoveryRate);
+    const expectedRise = Math.round(calcExpectedRise(totalDose, store.profile.weight, med.recoveryRate));
 
     document.getElementById('totalDose').textContent = `${totalDose} mg`;
     document.getElementById('currentWeight').textContent = `${store.profile.weight} kg`;
     document.getElementById('currentRecoveryRate').textContent = `${med.recoveryRate}`;
-    document.getElementById('expectedRise').textContent = `${expectedRise.toFixed(3)} mg/L`;
+    document.getElementById('expectedRise').textContent = `${expectedRise}%`;
     submitBtn.disabled = totalDose <= 0;
   };
 
@@ -345,13 +345,11 @@ function renderMedicineList() {
         <button class="small-btn" data-edit-id="${m.id}" type="button">编辑</button>
       </div>
       <div class="spec-main">${[...m.specs].sort((a, b) => a - b).join(' / ')} ${m.unit}</div>
-      <div class="muted">同品牌下不同规格共用半衰期、回收率系数与规格单位</div>
       <div class="stats">
         <div><span>半衰期</span><strong>${m.halfLife} h</strong></div>
         <div><span>回收率系数（浓度换算）</span><strong>${m.recoveryRate}</strong></div>
         <div><span>规格单位</span><strong>${m.unit}</strong></div>
       </div>
-      <div class="meta-line">预计提升浓度 =（总剂量 / 体重）× 回收率系数</div>
     </article>
   `).join('');
 
@@ -496,7 +494,7 @@ function renderHistoryList() {
   list.innerHTML = rows.map((r, idx) => {
     const med = getMedicineById(r.medicineId);
     const dose = calcDoseByCounts(r.counts);
-    const rise = calcExpectedRise(dose, store.profile.weight, med?.recoveryRate || 0);
+    const rise = Math.round(calcExpectedRise(dose, store.profile.weight, med?.recoveryRate || 0));
     const key = `${r.timestamp}_${r.medicineId}_${idx}`;
     const isNew = key === lastAddedRecordKey;
     return `
@@ -507,7 +505,7 @@ function renderHistoryList() {
         </div>
         <div class="muted">规格组合：${Object.entries(r.counts).map(([s, c]) => `${s}${med?.unit || ''}×${c}`).join(' + ')}</div>
         <div class="muted">总剂量：${dose.toFixed(2)} ${med?.unit || ''}</div>
-        <div class="muted">预计提升浓度：${rise.toFixed(2)}%</div>
+        <div class="muted">预计提升浓度：${rise}%</div>
       </article>
     `;
   }).join('');
@@ -541,12 +539,12 @@ function initHistoryRecordForm() {
       counts[el.dataset.countFor] = Number(el.textContent || 0);
     });
     const total = calcDoseByCounts(counts);
-    const rise = calcExpectedRise(total, store.profile.weight, med.recoveryRate);
+    const rise = Math.round(calcExpectedRise(total, store.profile.weight, med.recoveryRate));
     document.getElementById('totalDose').textContent = `${total.toFixed(2)} ${med.unit}`;
     document.getElementById('currentWeight').textContent = `${store.profile.weight} kg`;
     document.getElementById('currentRecoveryRate').textContent = String(med.recoveryRate);
-    document.getElementById('expectedRise').textContent = `${rise.toFixed(2)}%`;
-    document.getElementById('calcDetail').textContent = `计算明细：(${total.toFixed(2)} / ${store.profile.weight}) × ${med.recoveryRate} = ${rise.toFixed(2)}%`;
+    document.getElementById('expectedRise').textContent = `${rise}%`;
+    document.getElementById('calcDetail').textContent = `计算明细：(${total.toFixed(2)} / ${store.profile.weight}) × ${med.recoveryRate} ≈ ${rise}%`;
     submitBtn.disabled = total <= 0;
     setStatus('recordStatus', total > 0 ? '可提交：计算完成。' : '请填写规格数量后提交。');
   };
