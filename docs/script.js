@@ -93,17 +93,32 @@ function drawChart(labels, points) {
   const ctx = canvas.getContext('2d');
   const width = canvas.width;
   const height = canvas.height;
-  const padArea = { left: 42, right: 14, top: 16, bottom: 36 };
+  const padArea = { left: 58, right: 18, top: 20, bottom: 42 };
   const maxY = 120;
 
   ctx.clearRect(0, 0, width, height);
-  ctx.strokeStyle = '#e5e7eb';
-  for (let i = 0; i <= 6; i += 1) {
-    const y = padArea.top + ((height - padArea.top - padArea.bottom) * i) / 6;
+
+  // axes
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padArea.left, padArea.top);
+  ctx.lineTo(padArea.left, height - padArea.bottom);
+  ctx.lineTo(width - padArea.right, height - padArea.bottom);
+  ctx.stroke();
+
+  // y ticks 0..120 step 20
+  for (let v = 0; v <= 120; v += 20) {
+    const y = padArea.top + ((maxY - v) / maxY) * (height - padArea.top - padArea.bottom);
+    ctx.strokeStyle = '#e5e7eb';
     ctx.beginPath();
     ctx.moveTo(padArea.left, y);
     ctx.lineTo(width - padArea.right, y);
     ctx.stroke();
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px sans-serif';
+    ctx.fillText(`${v}%`, 18, y + 4);
   }
 
   const toX = (i) => padArea.left + ((width - padArea.left - padArea.right) * i) / Math.max(labels.length - 1, 1);
@@ -124,6 +139,20 @@ function drawChart(labels, points) {
   ctx.strokeStyle = '#2563eb';
   ctx.lineWidth = 3;
   ctx.stroke();
+
+  const step = homeChartMode === 'day' ? 3 : 1;
+  labels.forEach((label, i) => {
+    if (i % step !== 0 && i !== labels.length - 1) return;
+    ctx.fillStyle = '#475569';
+    ctx.font = '11px sans-serif';
+    ctx.fillText(label, toX(i) - 14, height - 12);
+  });
+
+  // axis names
+  ctx.fillStyle = '#334155';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('血药浓度（%）', 8, padArea.top - 4);
+  ctx.fillText('时间', width - 38, height - 8);
 }
 
 function renderHomeStats() {
@@ -135,9 +164,9 @@ function renderHomeStats() {
   const monthly = store.records.filter((r) => new Date(r.timestamp) >= monthAgo);
 
   document.getElementById('weeklyDoseCount').textContent = `${weekly.length} 次`;
-  document.getElementById('weeklyDoseTotal').textContent = `${weekly.reduce((s, r) => s + calcDoseByCounts(r.counts), 0)} mg`;
+  document.getElementById('weeklyDoseTotal').textContent = `${weekly.reduce((s, r) => s + calcDoseByCounts(r.counts), 0).toFixed(0)} IU`;
   document.getElementById('monthlyDoseCount').textContent = `${monthly.length} 次`;
-  document.getElementById('monthlyDoseTotal').textContent = `${monthly.reduce((s, r) => s + calcDoseByCounts(r.counts), 0)} mg`;
+  document.getElementById('monthlyDoseTotal').textContent = `${monthly.reduce((s, r) => s + calcDoseByCounts(r.counts), 0).toFixed(0)} IU`;
 }
 
 function setHomeTabs() {

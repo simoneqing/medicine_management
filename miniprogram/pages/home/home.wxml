@@ -8,20 +8,20 @@
     <view class="card">
       <view class="card-title">本周用药统计</view>
       <view class="row"><text>用药次数</text><text class="value">{{weeklyStats.count}} 次</text></view>
-      <view class="row"><text>总剂量</text><text class="value">{{weeklyStats.totalDose}} mg</text></view>
+      <view class="row"><text>总量</text><text class="value">{{weeklyStats.totalDoseIU}} IU</text></view>
     </view>
 
     <view class="card">
       <view class="card-title">本月用药统计</view>
       <view class="row"><text>用药次数</text><text class="value">{{monthlyStats.count}} 次</text></view>
-      <view class="row"><text>总剂量</text><text class="value">{{monthlyStats.totalDose}} mg</text></view>
+      <view class="row"><text>总量</text><text class="value">{{monthlyStats.totalDoseIU}} IU</text></view>
     </view>
   </view>
 
   <view class="card">
     <view class="card-title">当前血药浓度（统一累计）</view>
     <view class="conc">{{currentConcentration}} %</view>
-    <view class="muted">所有品牌药物记录统一累计到一个血药浓度模型</view>
+    <view class="muted">纵轴：血药浓度（%） | 横轴：时间</view>
   </view>
 
   <view class="card">
@@ -33,7 +33,7 @@
       </view>
     </view>
     <canvas type="2d" id="chartCanvas" class="chart"></canvas>
-    <view class="muted">纵坐标固定 0%~120%</view>
+    <view class="muted">纵轴固定：0%~120%，曲线表示血药浓度随时间变化</view>
   </view>
 
   <view class="actions">

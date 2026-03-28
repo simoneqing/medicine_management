@@ -43,8 +43,8 @@ Page({
       { medicineId: 'm1', timestamp: '2026-03-27T08:20:00+08:00', counts: { '20': 2 } },
       { medicineId: 'm2', timestamp: '2026-03-26T20:15:00+08:00', counts: { '25': 1 } }
     ],
-    weeklyStats: { count: 0, totalDose: 0 },
-    monthlyStats: { count: 0, totalDose: 0 },
+    weeklyStats: { count: 0, totalDoseIU: 0 },
+    monthlyStats: { count: 0, totalDoseIU: 0 },
     currentConcentration: '0.0',
     chartMode: 'day',
     chartData: { labels: [], points: [] }
@@ -80,8 +80,8 @@ Page({
     const current = calcConcentrationAt(this.data.records, this.data.medicines, this.data.profile.weight, now);
 
     this.setData({
-      weeklyStats: { count: weekly.length, totalDose: weeklyTotal },
-      monthlyStats: { count: monthly.length, totalDose: monthlyTotal },
+      weeklyStats: { count: weekly.length, totalDoseIU: Number(weeklyTotal.toFixed(0)) },
+      monthlyStats: { count: monthly.length, totalDoseIU: Number(monthlyTotal.toFixed(0)) },
       currentConcentration: current.toFixed(1)
     });
   },
@@ -133,6 +133,10 @@ Page({
         ctx.moveTo(pad.left, y);
         ctx.lineTo(width - pad.right, y);
         ctx.stroke();
+        const tick = 120 - i * 20;
+        ctx.fillStyle = '#64748b';
+        ctx.font = '10px sans-serif';
+        ctx.fillText(`${tick}%`, 2, y + 3);
       }
 
       const toX = (i) => pad.left + ((width - pad.left - pad.right) * i) / Math.max(labels.length - 1, 1);
@@ -162,6 +166,11 @@ Page({
           ctx.fillText(label, toX(i) - 10, height - 8);
         }
       });
+
+      ctx.fillStyle = '#334155';
+      ctx.font = '11px sans-serif';
+      ctx.fillText('血药浓度（%）', 4, 10);
+      ctx.fillText('时间', width - 24, height - 8);
     });
   },
 
