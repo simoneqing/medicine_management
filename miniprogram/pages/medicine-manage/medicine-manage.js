@@ -3,6 +3,7 @@ Page({
     medicines: [],
     editingId: '',
     statusText: '可新增或点击列表“编辑”后更新。',
+    editStateText: '当前状态：新增药品',
     form: {
       brand: '',
       halfLife: '',
@@ -22,7 +23,7 @@ Page({
   },
 
   formatMedicines(list) {
-    return list.map((m) => ({ ...m, specText: `${m.specs.join(' / ')} ${m.unit}` }));
+    return list.map((m) => ({ ...m, specText: `${[...m.specs].sort((a,b)=>a-b).join(' / ')} ${m.unit}` }));
   },
 
   onInput(e) {
@@ -60,7 +61,8 @@ Page({
         unit: med.unit || 'IU',
         specs: [...med.specs]
       },
-      statusText: `已载入 ${med.brand}，可编辑共享参数和规格列表。`
+      statusText: `已载入 ${med.brand}，可编辑共享参数和规格列表。`,
+      editStateText: `当前正在编辑：${med.brand}`
     });
   },
 
@@ -68,6 +70,7 @@ Page({
     this.setData({
       editingId: '',
       statusText: '可新增或点击列表“编辑”后更新。',
+      editStateText: '当前状态：新增药品',
       form: {
         brand: '',
         halfLife: '',
@@ -81,7 +84,7 @@ Page({
   saveMedicine() {
     const { brand, halfLife, recoveryRate, unit, specs } = this.data.form;
     const cleanUnit = (unit || 'IU').trim() || 'IU';
-    const cleanSpecs = specs.map(Number).filter((x) => Number.isFinite(x) && x > 0);
+    const cleanSpecs = specs.map(Number).filter((x) => Number.isFinite(x) && x > 0).sort((a, b) => a - b);
 
     if (!brand || !halfLife || !recoveryRate || !cleanSpecs.length) {
       this.setData({ statusText: '请完整填写品牌、半衰期、回收率、单位和规格列表。' });

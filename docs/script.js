@@ -229,10 +229,13 @@ function renderSpecEditor() {
 
   list.innerHTML = draftSpecs.map((value, index) => `
     <div class="spec-editor-row">
-      <label>规格 ${index + 1}<span class="spec-unit-tag">单位：${unit}</span>
-        <input type="number" min="0.1" step="0.1" value="${value}" data-spec-index="${index}" class="spec-edit-input" />
+      <label>规格 ${index + 1}
+        <div class="spec-input-wrap">
+          <input type="number" min="0.1" step="0.1" value="${value}" data-spec-index="${index}" class="spec-edit-input" />
+          <span class="spec-unit-tag">${unit}</span>
+        </div>
       </label>
-      <button class="btn-secondary" type="button" data-remove-index="${index}">删除</button>
+      <button class="btn-ghost" type="button" data-remove-index="${index}">删除</button>
     </div>
   `).join('');
 
@@ -260,13 +263,14 @@ function renderMedicineList() {
         <strong>${m.brand}</strong>
         <button class="small-btn" data-edit-id="${m.id}" type="button">编辑</button>
       </div>
-      <div class="muted">同品牌下不同规格共用半衰期、回收率与规格单位</div>
+      <div class="spec-main">${[...m.specs].sort((a, b) => a - b).join(' / ')} ${m.unit}</div>
+      <div class="muted">同品牌下不同规格共用半衰期、回收率系数与规格单位</div>
       <div class="stats">
         <div><span>半衰期</span><strong>${m.halfLife} h</strong></div>
-        <div><span>回收率</span><strong>${m.recoveryRate}</strong></div>
+        <div><span>回收率系数（浓度换算）</span><strong>${m.recoveryRate}</strong></div>
         <div><span>规格单位</span><strong>${m.unit}</strong></div>
-        <div><span>规格列表</span><strong>${m.specs.join(' / ')} ${m.unit}</strong></div>
       </div>
+      <div class="meta-line">预计提升浓度 =（总剂量 / 体重）× 回收率系数</div>
     </article>
   `).join('');
 
@@ -283,6 +287,8 @@ function renderMedicineList() {
       document.getElementById('medUnit').value = med.unit || 'IU';
       renderSpecEditor();
       setStatus('medicineStatus', `已载入 ${med.brand}，可编辑共享参数和规格列表。`);
+      const editState = document.getElementById('medicineEditState');
+      if (editState) editState.textContent = `当前正在编辑：${med.brand}`;
     });
   });
 }
@@ -297,6 +303,8 @@ function resetMedicineForm() {
   document.getElementById('medUnit').value = 'IU';
   renderSpecEditor();
   setStatus('medicineStatus', '可新增或点击列表“编辑”后更新。');
+  const editState = document.getElementById('medicineEditState');
+  if (editState) editState.textContent = '当前状态：新增药品';
 }
 
 function initMedicineManage() {
@@ -316,7 +324,7 @@ function initMedicineManage() {
     const halfLife = Number(document.getElementById('medHalfLife').value);
     const recoveryRate = Number(document.getElementById('medRecoveryRate').value);
     const unit = (document.getElementById('medUnit').value || 'IU').trim() || 'IU';
-    const specs = draftSpecs.map(Number).filter((x) => Number.isFinite(x) && x > 0);
+    const specs = draftSpecs.map(Number).filter((x) => Number.isFinite(x) && x > 0).sort((a, b) => a - b);
 
     if (!brand || !halfLife || !recoveryRate || !specs.length) {
       setStatus('medicineStatus', '请完整填写品牌、半衰期、回收率、单位和规格列表。', 'error');
