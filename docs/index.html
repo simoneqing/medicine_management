@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用药管理 - 首页预览</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body data-page="home">
+  <main class="app">
+    <header class="hero card">
+      <div>
+        <p class="eyebrow">Medication Demo</p>
+        <h1>用药管理</h1>
+        <p>网页原型（GitHub Pages）</p>
+      </div>
+      <div class="now-time" id="nowTime">--:--</div>
+    </header>
+
+    <section class="grid two">
+      <article class="card">
+        <h2>本周用药统计</h2>
+        <div class="stats">
+          <div><span>用药次数</span><strong id="weeklyDoseCount">0 次</strong></div>
+          <div><span>漏服提醒</span><strong id="weeklyMissedCount">0 次</strong></div>
+          <div><span>剩余药量</span><strong id="remainCount">0 片</strong></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>最近一次用药</h2>
+        <div class="stats">
+          <div><span>药品品牌</span><strong id="lastMedicine">--</strong></div>
+          <div><span>规格组合</span><strong id="lastSpec">--</strong></div>
+          <div><span>总剂量</span><strong id="lastDose">--</strong></div>
+          <div><span>用药时间</span><strong id="lastTime">--</strong></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid one">
+      <article class="card highlight-card">
+        <h2>当前时刻血药浓度</h2>
+        <p class="conc-value"><span id="currentConc">0.00</span> <small>mg/L（mock）</small></p>
+        <p class="muted">依据历史记录估算当前浓度：每经过一个半衰期浓度减半。</p>
+      </article>
+    </section>
+
+    <section class="grid one">
+      <article class="card">
+        <div class="card-head">
+          <h2>血药浓度曲线（24h）</h2>
+          <span class="badge" id="halfLifeBadge">半衰期 -- h</span>
+        </div>
+        <canvas id="concChart" width="900" height="300" aria-label="血药浓度曲线"></canvas>
+      </article>
+    </section>
+
+    <section class="grid four">
+      <a class="card action" href="./history.html">
+        <h3>历史记录</h3>
+        <p>查看所有记录与剂量明细</p>
+      </a>
+      <a class="card action primary" href="./add-record.html">
+        <h3>新增记录</h3>
+        <p>按药品规格录入，自动计算剂量</p>
+      </a>
+      <a class="card action" href="./medicine-manage.html">
+        <h3>药品维护</h3>
+        <p>维护半衰期、回收率、规格</p>
+      </a>
+      <a class="card action" href="./profile.html">
+        <h3>个人信息</h3>
+        <p><span id="weightText">体重 -- kg</span></p>
+      </a>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" id="bottomNav"></nav>
+  <script src="./script.js"></script>
+</body>
+</html>
