@@ -3,22 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>历史用药记录</title>
+  <title>历史记录工作台</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body data-page="history">
   <main class="app">
     <header class="topbar card">
       <a class="text-link" href="./index.html">← 返回首页</a>
-      <h1>历史用药记录</h1>
-      <p class="muted">按时间倒序展示历史用药记录，可快速回看剂量组合。</p>
+      <h1>历史记录工作台</h1>
+      <p class="muted">查看历史、筛选记录，并在本页完成新增用药录入。</p>
     </header>
 
+    <section class="grid two">
+      <article class="card">
+        <h2>历史总用药次数</h2>
+        <p class="conc-value"><span id="historyTotalCount">0</span> <small>次</small></p>
+      </article>
+      <article class="card">
+        <h2>本年用药次数</h2>
+        <p class="conc-value"><span id="historyYearCount">0</span> <small>次</small></p>
+      </article>
+    </section>
+
     <section class="card">
+      <div class="card-head">
+        <h2>时间筛选</h2>
+      </div>
+      <div class="filter-row">
+        <button id="filterWeek" class="small-btn active" type="button">本周</button>
+        <button id="filterMonth" class="small-btn" type="button">本月</button>
+        <button id="filterCustom" class="small-btn" type="button">自定义</button>
+      </div>
+      <div id="customDateWrap" class="custom-date-wrap hidden">
+        <label>开始日期<input id="customStart" type="date" /></label>
+        <label>结束日期<input id="customEnd" type="date" /></label>
+        <button id="applyCustomFilter" class="btn-ghost" type="button">应用自定义筛选</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="list-head">
+        <h2>历史记录</h2>
+        <button class="btn-primary small-main" id="openAddInHistory" type="button">+ 新增记录</button>
+      </div>
       <div id="historyList" class="list"></div>
       <p id="historyStatus" class="status-text"></p>
     </section>
   </main>
+
+  <button class="fab-add" id="fabAddBtn" type="button">＋</button>
+
+  <section class="drawer hidden" id="historyAddDrawer">
+    <div class="drawer-panel">
+      <div class="list-head">
+        <h2>新增用药记录</h2>
+        <button id="closeAddDrawer" class="btn-ghost" type="button">关闭</button>
+      </div>
+      <label>用药时间
+        <input type="datetime-local" id="recordTime" />
+      </label>
+      <label>药品品牌
+        <select id="medicineSelect"></select>
+      </label>
+      <div id="specInputs" class="spec-grid"></div>
+
+      <div class="card compact-card">
+        <div class="stats">
+          <div><span>总剂量</span><strong id="totalDose">0</strong></div>
+          <div><span>体重</span><strong id="currentWeight">-- kg</strong></div>
+          <div><span>回收率</span><strong id="currentRecoveryRate">--</strong></div>
+          <div><span>预计提升浓度</span><strong id="expectedRise">0.000</strong></div>
+        </div>
+        <p class="muted" id="calcDetail">计算明细：预计提升浓度 =（总剂量 / 体重）× 回收率</p>
+      </div>
+
+      <p class="status-text" id="recordStatus">请填写规格数量后提交。</p>
+      <button class="btn-primary" id="submitRecordBtn" type="button">提交记录</button>
+    </div>
+  </section>
 
   <nav class="bottom-nav" id="bottomNav"></nav>
   <script src="./script.js"></script>

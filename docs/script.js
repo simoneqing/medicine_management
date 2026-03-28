@@ -14,6 +14,9 @@ const store = {
 let editingMedicineId = null;
 let homeChartMode = 'day';
 let draftSpecs = [150, 300, 600];
+let historyFilterMode = 'week';
+let lastAddedRecordKey = '';
+
 
 function page() { return document.body.dataset.page; }
 function pad(n) { return `${n}`.padStart(2, '0'); }
@@ -37,7 +40,7 @@ function buildBottomNav() {
   const map = [
     { p: 'home', href: './index.html', label: '首页' },
     { p: 'history', href: './history.html', label: '历史' },
-    { p: 'add-record', href: './add-record.html', label: '新增' },
+    { p: 'add-record', href: './history.html?openAdd=1', label: '新增' },
     { p: 'medicine-manage', href: './medicine-manage.html', label: '药品' },
     { p: 'profile', href: './profile.html', label: '我的' }
   ];
@@ -351,15 +354,179 @@ function initMedicineManage() {
   document.getElementById('resetMedicineBtn').addEventListener('click', resetMedicineForm);
 }
 
-function initHistory() {
+function openHistoryAddDrawer() {
+  const d = document.getElementById('historyAddDrawer');
+  if (!d) return;
+  d.classList.remove('hidden');
+  const t = document.getElementById('recordTime');
+  if (t) t.value = toDatetimeLocalValue(new Date());
+}
+
+function closeHistoryAddDrawer() {
+  const d = document.getElementById('historyAddDrawer');
+  if (!d) return;
+  d.classList.add('hidden');
+}
+
+function getFilteredHistoryRecords() {
+  const now = new Date();
+  const rows = [...store.records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  if (historyFilterMode === 'week') {
+    const from = new Date(now.getTime() - 7 * 24 * 3600000);
+    return rows.filter((r) => new Date(r.timestamp) >= from);
+  }
+  if (historyFilterMode === 'month') {
+    const from = new Date(now.getTime() - 30 * 24 * 3600000);
+    return rows.filter((r) => new Date(r.timestamp) >= from);
+  }
+  if (historyFilterMode === 'custom') {
+    const sDate = document.getElementById('customStart')?.value;
+    const eDate = document.getElementById('customEnd')?.value;
+    if (!sDate || !eDate) return rows;
+    const from = new Date(`${sDate}T00:00:00`);
+    const to = new Date(`${eDate}T23:59:59`);
+    return rows.filter((r) => {
+      const t = new Date(r.timestamp);
+      return t >= from && t <= to;
+    });
+  }
+  return rows;
+}
+
+function renderHistoryStats() {
+  const total = store.records.length;
+  const year = new Date().getFullYear();
+  const yearCount = store.records.filter((r) => new Date(r.timestamp).getFullYear() === year).length;
+  const totalEl = document.getElementById('historyTotalCount');
+  const yearEl = document.getElementById('historyYearCount');
+  if (totalEl) totalEl.textContent = String(total);
+  if (yearEl) yearEl.textContent = String(yearCount);
+}
+
+function renderHistoryList() {
   const list = document.getElementById('historyList');
   if (!list) return;
-  const rows = [...store.records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  list.innerHTML = rows.map((r) => {
+  const rows = getFilteredHistoryRecords();
+
+  if (!rows.length) {
+    list.innerHTML = '';
+    setStatus('historyStatus', '当前筛选条件下暂无记录。');
+    return;
+  }
+
+  list.innerHTML = rows.map((r, idx) => {
     const med = getMedicineById(r.medicineId);
     const dose = calcDoseByCounts(r.counts);
-    return `<article class="list-item"><div class="list-head"><strong>${med?.brand || '未知药品'}</strong><span>${formatDateTime(new Date(r.timestamp))}</span></div><div class="muted">剂量组合：${Object.entries(r.counts).map(([s, c]) => `${s}${med?.unit || ''}×${c}`).join(' + ')}</div><div class="muted">总剂量：${dose}</div></article>`;
+    const rise = calcExpectedRise(dose, store.profile.weight, med?.recoveryRate || 0);
+    const key = `${r.timestamp}_${r.medicineId}_${idx}`;
+    const isNew = key === lastAddedRecordKey;
+    return `
+      <article class="list-item ${isNew ? 'new-record' : ''}">
+        <div class="list-head">
+          <strong>${formatDateTime(new Date(r.timestamp))}</strong>
+          <span>${med?.brand || '未知药品'} ${isNew ? '<span class="new-tag">刚刚新增</span>' : ''}</span>
+        </div>
+        <div class="muted">规格组合：${Object.entries(r.counts).map(([s, c]) => `${s}${med?.unit || ''}×${c}`).join(' + ')}</div>
+        <div class="muted">总剂量：${dose.toFixed(2)} ${med?.unit || ''}</div>
+        <div class="muted">预计提升浓度：${rise.toFixed(3)}</div>
+      </article>
+    `;
   }).join('');
+
+  setStatus('historyStatus', `共 ${rows.length} 条记录，已按时间倒序展示。`);
+}
+
+function setFilterButtonState() {
+  ['week', 'month', 'custom'].forEach((mode) => {
+    const id = mode === 'week' ? 'filterWeek' : mode === 'month' ? 'filterMonth' : 'filterCustom';
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.toggle('active', historyFilterMode === mode);
+  });
+  const wrap = document.getElementById('customDateWrap');
+  if (wrap) wrap.classList.toggle('hidden', historyFilterMode !== 'custom');
+}
+
+function initHistoryRecordForm() {
+  renderMedicineOptions();
+  const select = document.getElementById('medicineSelect');
+  if (!select) return;
+  renderSpecInputs(select.value);
+
+  const submitBtn = document.getElementById('submitRecordBtn');
+
+  const recalc = () => {
+    const med = getMedicineById(select.value);
+    if (!med) return;
+    const counts = {};
+    document.querySelectorAll('#specInputs .spec-count').forEach((input) => {
+      counts[input.dataset.spec] = Number(input.value || 0);
+    });
+    const total = calcDoseByCounts(counts);
+    const rise = calcExpectedRise(total, store.profile.weight, med.recoveryRate);
+    document.getElementById('totalDose').textContent = `${total.toFixed(2)} ${med.unit}`;
+    document.getElementById('currentWeight').textContent = `${store.profile.weight} kg`;
+    document.getElementById('currentRecoveryRate').textContent = String(med.recoveryRate);
+    document.getElementById('expectedRise').textContent = rise.toFixed(3);
+    document.getElementById('calcDetail').textContent = `计算明细：(${total.toFixed(2)} / ${store.profile.weight}) × ${med.recoveryRate} = ${rise.toFixed(3)}`;
+    submitBtn.disabled = total <= 0;
+    setStatus('recordStatus', total > 0 ? '可提交：计算完成。' : '请填写规格数量后提交。');
+  };
+
+  select.addEventListener('change', () => {
+    renderSpecInputs(select.value);
+    document.querySelectorAll('#specInputs .spec-count').forEach((input) => input.addEventListener('input', recalc));
+    recalc();
+  });
+
+  document.querySelectorAll('#specInputs .spec-count').forEach((input) => input.addEventListener('input', recalc));
+  recalc();
+
+  submitBtn.addEventListener('click', () => {
+    const med = getMedicineById(select.value);
+    const counts = {};
+    document.querySelectorAll('#specInputs .spec-count').forEach((input) => {
+      const n = Number(input.value || 0);
+      if (n > 0) counts[input.dataset.spec] = n;
+    });
+
+    const timestamp = document.getElementById('recordTime').value;
+    submitBtn.textContent = '提交中...';
+    submitBtn.disabled = true;
+
+    setTimeout(() => {
+      const iso = new Date(timestamp || new Date()).toISOString();
+      const newRecord = { medicineId: med.id, timestamp: iso, counts };
+      store.records.push(newRecord);
+      lastAddedRecordKey = `${newRecord.timestamp}_${newRecord.medicineId}_${getFilteredHistoryRecords().length}`;
+      renderHistoryStats();
+      renderHistoryList();
+      closeHistoryAddDrawer();
+      submitBtn.textContent = '提交记录';
+      setStatus('historyStatus', '新增成功：新记录已出现在列表中。');
+    }, 500);
+  });
+}
+
+function initHistory() {
+  if (!document.getElementById('historyList')) return;
+
+  renderHistoryStats();
+  setFilterButtonState();
+  renderHistoryList();
+  initHistoryRecordForm();
+
+  document.getElementById('filterWeek').addEventListener('click', () => { historyFilterMode = 'week'; setFilterButtonState(); renderHistoryList(); });
+  document.getElementById('filterMonth').addEventListener('click', () => { historyFilterMode = 'month'; setFilterButtonState(); renderHistoryList(); });
+  document.getElementById('filterCustom').addEventListener('click', () => { historyFilterMode = 'custom'; setFilterButtonState(); renderHistoryList(); });
+  document.getElementById('applyCustomFilter').addEventListener('click', renderHistoryList);
+
+  document.getElementById('openAddInHistory').addEventListener('click', openHistoryAddDrawer);
+  document.getElementById('fabAddBtn').addEventListener('click', openHistoryAddDrawer);
+  document.getElementById('closeAddDrawer').addEventListener('click', closeHistoryAddDrawer);
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('openAdd') === '1') openHistoryAddDrawer();
 }
 
 function initProfile() {

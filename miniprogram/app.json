@@ -1,7 +1,8 @@
 {
   "pages": [
     "pages/home/home",
-    "pages/medicine-manage/medicine-manage"
+    "pages/medicine-manage/medicine-manage",
+    "pages/history/history"
   ],
   "window": {
     "navigationBarTitleText": "用药管理",

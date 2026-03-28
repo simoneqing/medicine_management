@@ -165,7 +165,7 @@ Page({
     });
   },
 
-  handleAddRecord() { wx.showToast({ title: '请接入录入页', icon: 'none' }); },
-  handleViewHistory() { wx.showToast({ title: '请接入记录列表页', icon: 'none' }); },
+  handleAddRecord() { wx.navigateTo({ url: '/pages/history/history?openAdd=1' }); },
+  handleViewHistory() { wx.navigateTo({ url: '/pages/history/history' }); },
   handleViewProfile() { wx.showToast({ title: '请接入个人信息页', icon: 'none' }); }
 });
