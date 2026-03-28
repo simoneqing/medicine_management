@@ -1,19 +1,19 @@
-.container { padding: 24rpx; }
-.header { background: linear-gradient(135deg,#1d4ed8,#2563eb 60%,#38bdf8); border-radius: 24rpx; padding: 28rpx 24rpx; color:#fff; margin-bottom: 20rpx; }
+.container { padding: 24rpx; background: #f6f8fb; min-height: 100vh; }
+.header { background: linear-gradient(135deg,#22b368,#34c97b 60%,#68dda0); border-radius: 20rpx; padding: 28rpx 24rpx; color:#fff; margin-bottom: 20rpx; box-shadow: 0 6rpx 14rpx rgba(15,23,42,0.06); }
 .header-title { font-size: 38rpx; font-weight: 700; }
 .header-subtitle { margin-top: 10rpx; font-size: 24rpx; opacity: 0.95; }
 .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; margin-bottom: 16rpx; }
-.card { background:#fff; border-radius: 24rpx; padding: 20rpx; margin-bottom: 16rpx; }
+.card { background:#fff; border-radius: 16rpx; padding: 20rpx; margin-bottom: 16rpx; border: 1rpx solid #e5e7eb; box-shadow: 0 4rpx 10rpx rgba(15,23,42,0.04); }
 .card-title { font-size: 30rpx; font-weight: 600; margin-bottom: 12rpx; }
-.row { display: flex; justify-content: space-between; margin-bottom: 10rpx; color:#374151; font-size: 26rpx; }
+.row { display: flex; justify-content: space-between; margin-bottom: 10rpx; color:#1f2a37; font-size: 26rpx; }
 .value { font-weight: 600; }
-.conc { font-size: 52rpx; color:#2563eb; font-weight: 800; margin-bottom: 8rpx; }
+.conc { font-size: 52rpx; color:#34c97b; font-weight: 800; margin-bottom: 8rpx; }
 .muted { color:#6b7280; font-size: 24rpx; }
 .card-head { display:flex; justify-content: space-between; align-items:center; margin-bottom: 10rpx; }
-.tabs { display:flex; border:1px solid #d1d5db; border-radius:999rpx; overflow:hidden; }
+.tabs { display:flex; border:1px solid #e5e7eb; border-radius:999rpx; overflow:hidden; }
 .tab { padding: 8rpx 18rpx; font-size: 22rpx; color:#6b7280; }
-.tab.active { background:#2563eb; color:#fff; }
-.chart { width: 100%; height: 360rpx; }
+.tab.active { background:#34c97b; color:#fff; }
+.chart { width: 100%; height: 360rpx; border-radius: 12rpx; background: #ffffff; }
 .actions { display:flex; flex-direction: column; gap: 12rpx; }
-.action { background:#fff; color:#1f2937; border:0; border-radius: 18rpx; }
-.action.primary { background:#2563eb; color:#fff; }
+.action { background:#fff; color:#1f2a37; border: 1rpx solid #e5e7eb; border-radius: 14rpx; }
+.action.primary { background:#34c97b; color:#fff; border: none; }

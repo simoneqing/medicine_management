@@ -57,8 +57,8 @@ function setStatus(id, text, type = 'info') {
   const el = document.getElementById(id);
   if (!el) return;
   el.textContent = text;
-  el.style.color = type === 'error' ? '#b91c1c' : '#2563eb';
-  el.style.background = type === 'error' ? '#fee2e2' : '#eff6ff';
+  el.style.color = type === 'error' ? '#b91c1c' : '#1d8f59';
+  el.style.background = type === 'error' ? '#fee2e2' : '#ecfdf3';
 }
 
 function buildBottomNav() {
