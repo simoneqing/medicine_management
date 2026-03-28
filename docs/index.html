@@ -10,6 +10,7 @@
   <main class="app">
     <header class="hero card">
       <div>
+        <p class="eyebrow">Medication Demo</p>
         <h1>用药管理</h1>
         <p>网页原型（GitHub Pages）</p>
       </div>
@@ -29,27 +30,27 @@
       <article class="card">
         <h2>最近一次用药</h2>
         <div class="stats">
-          <div><span>药品</span><strong id="lastMedicine">--</strong></div>
+          <div><span>药品品牌</span><strong id="lastMedicine">--</strong></div>
           <div><span>规格组合</span><strong id="lastSpec">--</strong></div>
           <div><span>总剂量</span><strong id="lastDose">--</strong></div>
-          <div><span>时间</span><strong id="lastTime">--</strong></div>
+          <div><span>用药时间</span><strong id="lastTime">--</strong></div>
         </div>
       </article>
     </section>
 
     <section class="grid one">
-      <article class="card">
+      <article class="card highlight-card">
         <h2>当前时刻血药浓度</h2>
         <p class="conc-value"><span id="currentConc">0.00</span> <small>mg/L（mock）</small></p>
-        <p class="muted">公式：预计提升浓度 = (总剂量 / 体重kg) × 回收率；每经过一个半衰期浓度减半。</p>
+        <p class="muted">依据历史记录估算当前浓度：每经过一个半衰期浓度减半。</p>
       </article>
     </section>
 
     <section class="grid one">
       <article class="card">
         <div class="card-head">
-          <h2>血药浓度随时间变化曲线（24h）</h2>
-          <span class="badge" id="halfLifeBadge">半衰期 --h</span>
+          <h2>血药浓度曲线（24h）</h2>
+          <span class="badge" id="halfLifeBadge">半衰期 -- h</span>
         </div>
         <canvas id="concChart" width="900" height="300" aria-label="血药浓度曲线"></canvas>
       </article>
@@ -58,11 +59,11 @@
     <section class="grid four">
       <a class="card action" href="./history.html">
         <h3>历史记录</h3>
-        <p>按时间查看历史用药记录</p>
+        <p>查看所有记录与剂量明细</p>
       </a>
       <a class="card action primary" href="./add-record.html">
         <h3>新增记录</h3>
-        <p>基于药品维护配置快速录入</p>
+        <p>按药品规格录入，自动计算剂量</p>
       </a>
       <a class="card action" href="./medicine-manage.html">
         <h3>药品维护</h3>
@@ -75,6 +76,7 @@
     </section>
   </main>
 
+  <nav class="bottom-nav" id="bottomNav"></nav>
   <script src="./script.js"></script>
 </body>
 </html>
