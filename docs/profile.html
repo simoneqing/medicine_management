@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>个人信息</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body data-page="profile">
+  <main class="app">
+    <header class="topbar card">
+      <a class="text-link" href="./index.html">← 返回首页</a>
+      <h1>个人信息</h1>
+      <p class="muted">体重用于浓度计算：预计提升浓度 = (总剂量 / 体重) × 回收率。</p>
+    </header>
+
+    <section class="card">
+      <h2>当前体重</h2>
+      <p class="conc-value"><span id="profileWeight">--</span> <small>kg</small></p>
+      <p class="status-text">当前为 mock 数据展示，可在真实版本接入用户资料编辑。</p>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" id="bottomNav"></nav>
+  <script src="./script.js"></script>
+</body>
+</html>
