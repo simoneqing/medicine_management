@@ -121,6 +121,8 @@ miniprogram/
   app.js
   app.json
   app.wxss
+  project.config.json
+  sitemap.json
   pages/
     home/
       home.wxml
@@ -131,11 +133,11 @@ miniprogram/
     record-add/
     concentration-chart/
     profile/
-cloudfunctions/
-  addMedicineRecord/
-  getWeeklyStats/
-  getLastRecord/
-  calculateConcentration/
+  cloudfunctions/
+    addMedicineRecord/
+    getWeeklyStats/
+    getLastRecord/
+    calculateConcentration/
 ```
 
 ### 4) 首页模块的小程序落地约束
@@ -148,4 +150,3 @@ cloudfunctions/
 
 - 仅将小程序编译产物提交审核，Web 原型不可替代小程序包。
 - 云函数涉及医疗相关信息时，需最小化采集并做好访问控制与日志审计。
-

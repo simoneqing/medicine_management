@@ -2,6 +2,8 @@
   "description": "用药管理微信小程序",
   "appid": "touristappid",
   "projectname": "medicine-management",
+  "miniprogramRoot": "./",
+  "cloudfunctionRoot": "cloudfunctions/",
   "setting": {
     "urlCheck": false,
     "es6": true,

@@ -3,7 +3,7 @@
 ## 目录结构
 
 - `miniprogram/`：微信小程序原生代码（用于微信开发者工具）。
-- `cloudfunctions/`：微信云函数。
+- `miniprogram/cloudfunctions/`：微信云函数（与小程序主目录同级子目录，导入后可直接右键部署）。
 - `docs/`：GitHub Pages 网页原型预览代码。
 
 ## GitHub Pages 配置
@@ -17,7 +17,7 @@
 ## 微信开发者工具打开方式
 
 - 在微信开发者工具中，选择导入项目目录：`miniprogram/`。
-- `appid`、`project.config.json`、`app.json` 均在该目录中，后续可直接开发和部署。
+- `appid`、`project.config.json`、`app.json`、`cloudfunctions/` 均在该目录中，后续可直接开发和部署云函数。
 
 
 ## 常见问题排查（merge 后页面无变化）
