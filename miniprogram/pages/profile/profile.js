@@ -1,0 +1,101 @@
+const PROFILE_STORAGE_KEY = 'medicine_profile_mock_v1';
+
+function normalizeWeight(value) {
+  const text = `${value ?? ''}`.trim();
+  if (!/^\d+(\.\d)?$/.test(text)) return null;
+  const num = Number(text);
+  if (!Number.isFinite(num)) return null;
+  if (num <= 0 || num > 300) return null;
+  return Number(num.toFixed(1));
+}
+
+Page({
+  data: {
+    profile: { weight: 68 },
+    weightInput: '68',
+    canSave: true,
+    saving: false,
+    statusType: 'info',
+    statusText: '请输入大于 0 且不超过 300 的数字（最多 1 位小数）。'
+  },
+
+  onLoad() {
+    this.loadProfile();
+  },
+
+  loadProfile() {
+    const cached = wx.getStorageSync(PROFILE_STORAGE_KEY);
+    const fallbackWeight = this.data.profile.weight;
+    const nextWeight = normalizeWeight(cached && cached.weight);
+    const weight = nextWeight === null ? fallbackWeight : nextWeight;
+    this.setData({
+      profile: { ...this.data.profile, weight },
+      weightInput: String(weight),
+      canSave: true
+    });
+  },
+
+  onWeightInput(e) {
+    const nextInput = e.detail.value;
+    const nextWeight = normalizeWeight(nextInput);
+    if (!nextInput.trim()) {
+      this.setData({
+        weightInput: nextInput,
+        canSave: false,
+        statusType: 'error',
+        statusText: '体重不能为空，请输入有效数字。'
+      });
+      return;
+    }
+
+    if (nextWeight === null) {
+      this.setData({
+        weightInput: nextInput,
+        canSave: false,
+        statusType: 'error',
+        statusText: '输入不合法：仅支持 >0 且 <=300，最多 1 位小数。'
+      });
+      return;
+    }
+
+    this.setData({
+      weightInput: nextInput,
+      canSave: true,
+      statusType: 'info',
+      statusText: '输入合法，可点击“保存体重”。'
+    });
+  },
+
+  setStatus(text, type = 'info') {
+    this.setData({ statusText: text, statusType: type });
+  },
+
+  saveWeight() {
+    if (this.data.saving || !this.data.canSave) return;
+    const input = (this.data.weightInput || '').trim();
+    if (!input) {
+      this.setStatus('体重不能为空，请输入有效数字。', 'error');
+      return;
+    }
+
+    const nextWeight = normalizeWeight(input);
+    if (nextWeight === null) {
+      this.setStatus('体重需为大于 0 且不超过 300 的数字（支持小数）。', 'error');
+      return;
+    }
+
+    this.setData({ saving: true });
+    setTimeout(() => {
+      const profile = { ...this.data.profile, weight: nextWeight };
+      wx.setStorageSync(PROFILE_STORAGE_KEY, profile);
+      this.setData({
+        saving: false,
+        profile,
+        weightInput: String(nextWeight),
+        canSave: true
+      });
+      this.setStatus('保存成功：当前体重已更新，并将用于后续计算。');
+      wx.showToast({ title: '保存成功', icon: 'success' });
+    }, 500);
+  }
+});
