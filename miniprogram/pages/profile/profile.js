@@ -1,4 +1,5 @@
 const PROFILE_STORAGE_KEY = 'medicine_profile_mock_v1';
+const DEFAULT_USER_ID = 'u_demo_001';
 
 function normalizeWeight(value) {
   const text = `${value ?? ''}`.trim();
@@ -11,6 +12,7 @@ function normalizeWeight(value) {
 
 Page({
   data: {
+    userId: DEFAULT_USER_ID,
     profile: { weight: 68 },
     weightInput: '68',
     canSave: true,
@@ -23,11 +25,28 @@ Page({
     this.loadProfile();
   },
 
-  loadProfile() {
+  async loadProfile() {
+    const db = wx.cloud.database();
+    try {
+      const res = await db.collection('users').doc(this.data.userId).get();
+      const nextWeight = normalizeWeight(res.data?.weight);
+      if (nextWeight !== null) {
+        const profile = { ...this.data.profile, weight: nextWeight };
+        wx.setStorageSync(PROFILE_STORAGE_KEY, profile);
+        this.setData({
+          profile,
+          weightInput: String(nextWeight),
+          canSave: true
+        });
+        return;
+      }
+    } catch (e) {
+      // fallback local cache
+    }
+
     const cached = wx.getStorageSync(PROFILE_STORAGE_KEY);
-    const fallbackWeight = this.data.profile.weight;
     const nextWeight = normalizeWeight(cached && cached.weight);
-    const weight = nextWeight === null ? fallbackWeight : nextWeight;
+    const weight = nextWeight === null ? this.data.profile.weight : nextWeight;
     this.setData({
       profile: { ...this.data.profile, weight },
       weightInput: String(weight),
@@ -70,7 +89,7 @@ Page({
     this.setData({ statusText: text, statusType: type });
   },
 
-  saveWeight() {
+  async saveWeight() {
     if (this.data.saving || !this.data.canSave) return;
     const input = (this.data.weightInput || '').trim();
     if (!input) {
@@ -85,8 +104,11 @@ Page({
     }
 
     this.setData({ saving: true });
-    setTimeout(() => {
-      const profile = { ...this.data.profile, weight: nextWeight };
+    const db = wx.cloud.database();
+    const profile = { ...this.data.profile, weight: nextWeight };
+
+    try {
+      await db.collection('users').doc(this.data.userId).set({ data: { weight: nextWeight, updatedAt: Date.now() } });
       wx.setStorageSync(PROFILE_STORAGE_KEY, profile);
       this.setData({
         saving: false,
@@ -96,6 +118,9 @@ Page({
       });
       this.setStatus('保存成功：当前体重已更新，并将用于后续计算。');
       wx.showToast({ title: '保存成功', icon: 'success' });
-    }, 500);
+    } catch (e) {
+      this.setData({ saving: false });
+      this.setStatus(`保存失败：${e.message || '请稍后重试'}`, 'error');
+    }
   }
 });

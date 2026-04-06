@@ -46,7 +46,7 @@
       <view class="field"><text>用药时间</text><input type="datetime-local" value="{{formTime}}" bindinput="onFormTime"/></view>
       <view class="field"><text>药品品牌</text>
         <picker range="{{medicineOptions}}" range-key="brand" value="{{selectedMedicineIndex}}" bindchange="onMedicineChange">
-          <view class="picker">{{medicineOptions[selectedMedicineIndex].brand}}</view>
+          <view class="picker">{{medicineOptions.length ? medicineOptions[selectedMedicineIndex].brand : '请先维护药品'}}</view>
         </picker>
       </view>
       <view class="muted">本次使用规格（未使用的规格保持为 0）</view>

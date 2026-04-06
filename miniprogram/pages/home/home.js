@@ -1,72 +1,30 @@
 const PROFILE_STORAGE_KEY = 'medicine_profile_mock_v1';
+const DEFAULT_USER_ID = 'u_demo_001';
 
-function calcDoseByCounts(counts) {
-  return Object.entries(counts).reduce((sum, [spec, count]) => sum + Number(spec) * Number(count || 0), 0);
-}
-
-function calcExpectedRise(totalDose, weight, recoveryRate) {
-  if (weight <= 0) return 0;
-  return (totalDose / weight) * recoveryRate;
-}
-
-function calcConcentrationAt(records, medicines, weight, targetDate) {
-  const sorted = [...records].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-  let concentration = 0;
-  let lastTime = null;
-
-  for (const record of sorted) {
-    const t = new Date(record.timestamp);
-    if (t > targetDate) break;
-    const med = medicines.find((m) => m.id === record.medicineId);
-    if (!med) continue;
-
-    if (lastTime) {
-      const elapsed = Math.max(0, (t - lastTime) / 3600000);
-      concentration *= Math.pow(0.5, elapsed / med.halfLife);
-    }
-
-    concentration += calcExpectedRise(calcDoseByCounts(record.counts), weight, med.recoveryRate);
-    lastTime = t;
-  }
-
-  if (concentration > 120) concentration = 120;
-  return Number(concentration.toFixed(1));
+function clamp(v, min, max) {
+  return Math.min(max, Math.max(min, v));
 }
 
 Page({
   data: {
+    userId: DEFAULT_USER_ID,
     profile: { weight: 68 },
-    medicines: [
-      { id: 'm1', brand: '舍曲林', halfLife: 26, recoveryRate: 2, specs: [10, 20, 40] },
-      { id: 'm2', brand: '阿戈美拉汀', halfLife: 2.3, recoveryRate: 1.4, specs: [25] }
-    ],
-    records: [
-      { medicineId: 'm1', timestamp: '2026-03-28T08:30:00+08:00', counts: { '20': 1, '40': 1 } },
-      { medicineId: 'm1', timestamp: '2026-03-27T08:20:00+08:00', counts: { '20': 2 } },
-      { medicineId: 'm2', timestamp: '2026-03-26T20:15:00+08:00', counts: { '25': 1 } }
-    ],
     weeklyStats: { count: 0, totalDoseIU: 0 },
     monthlyStats: { count: 0, totalDoseIU: 0 },
     currentConcentration: '0.0',
     chartMode: 'day',
-    chartData: { labels: [], points: [] }
+    chartData: { labels: [], points: [] },
+    lastRecord: null
   },
 
   onLoad() {
     this.loadProfileFromStorage();
-    this.buildStats();
-    this.buildChartData('day');
-    this.drawChart();
+    this.refreshHomeCloudData();
   },
 
   onShow() {
-    const oldWeight = this.data.profile.weight;
     this.loadProfileFromStorage();
-    if (this.data.profile.weight !== oldWeight) {
-      this.buildStats();
-      this.buildChartData(this.data.chartMode);
-      this.drawChart();
-    }
+    this.refreshHomeCloudData();
   },
 
   loadProfileFromStorage() {
@@ -75,6 +33,71 @@ Page({
     const nextWeight = Number(cached.weight);
     if (!Number.isFinite(nextWeight) || nextWeight <= 0 || nextWeight > 300) return;
     this.setData({ profile: { ...this.data.profile, weight: Number(nextWeight.toFixed(1)) } });
+  },
+
+  async callCloud(name, data) {
+    try {
+      const res = await wx.cloud.callFunction({ name, data });
+      return res.result || { success: false };
+    } catch (e) {
+      return { success: false, message: e?.errMsg || '云函数调用失败' };
+    }
+  },
+
+  computeConcentrationFromRecord(record, targetDate) {
+    if (!record) return 0;
+    const tRecord = new Date(record.timestamp).getTime();
+    const tTarget = targetDate.getTime();
+    if (!Number.isFinite(tRecord) || !Number.isFinite(tTarget) || tTarget < tRecord) return 0;
+
+    const elapsedHours = Math.max(0, (tTarget - tRecord) / 3600000);
+    const dose = Number(record.dose || 0);
+    const weight = Math.max(Number(this.data.profile.weight || record.weight || 60), 1);
+    const xValue = Number(record.xValue || 2);
+    const halfLife = Math.max(Number(record.halfLife || 24), 0.1);
+    const prevConc = Number(record.prevConc || 0);
+
+    const start = prevConc + (dose / weight) * xValue;
+    const current = start * Math.pow(0.5, elapsedHours / halfLife);
+    return Number(clamp(current, 0, 120).toFixed(1));
+  },
+
+  async refreshHomeCloudData() {
+    const userId = this.data.userId;
+    const [weekly, monthly, last] = await Promise.all([
+      this.callCloud('getWeeklyStats', { userId, days: 7 }),
+      this.callCloud('getWeeklyStats', { userId, days: 30 }),
+      this.callCloud('getLastRecord', { userId })
+    ]);
+
+    const updates = {};
+    if (weekly.success && weekly.data) {
+      updates.weeklyStats = {
+        count: Number(weekly.data.totalDoses || 0),
+        totalDoseIU: Number(weekly.data.totalDoseIU || 0)
+      };
+    }
+    if (monthly.success && monthly.data) {
+      updates.monthlyStats = {
+        count: Number(monthly.data.totalDoses || 0),
+        totalDoseIU: Number(monthly.data.totalDoseIU || 0)
+      };
+    }
+    if (last.success && last.data) {
+      updates.lastRecord = last.data;
+      if (Number.isFinite(Number(last.data.weight)) && Number(last.data.weight) > 0) {
+        updates.profile = { ...this.data.profile, weight: Number(last.data.weight) };
+      }
+    } else {
+      updates.lastRecord = null;
+    }
+
+    this.setData(updates, () => {
+      const nowConc = this.computeConcentrationFromRecord(this.data.lastRecord, new Date());
+      this.setData({ currentConcentration: nowConc.toFixed(1) });
+      this.buildChartData(this.data.chartMode);
+      this.drawChart();
+    });
   },
 
   switchToDay() {
@@ -87,26 +110,6 @@ Page({
     this.drawChart();
   },
 
-  buildStats() {
-    const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 3600000);
-    const monthAgo = new Date(now.getTime() - 30 * 24 * 3600000);
-
-    const weekly = this.data.records.filter((r) => new Date(r.timestamp) >= weekAgo);
-    const monthly = this.data.records.filter((r) => new Date(r.timestamp) >= monthAgo);
-
-    const weeklyTotal = weekly.reduce((s, r) => s + calcDoseByCounts(r.counts), 0);
-    const monthlyTotal = monthly.reduce((s, r) => s + calcDoseByCounts(r.counts), 0);
-
-    const current = calcConcentrationAt(this.data.records, this.data.medicines, this.data.profile.weight, now);
-
-    this.setData({
-      weeklyStats: { count: weekly.length, totalDoseIU: Number(weeklyTotal.toFixed(0)) },
-      monthlyStats: { count: monthly.length, totalDoseIU: Number(monthlyTotal.toFixed(0)) },
-      currentConcentration: current.toFixed(1)
-    });
-  },
-
   buildChartData(mode) {
     const now = new Date();
     const labels = [];
@@ -116,13 +119,13 @@ Page({
       for (let i = 23; i >= 0; i -= 1) {
         const d = new Date(now.getTime() - i * 3600000);
         labels.push(`${d.getHours()}时`);
-        points.push(calcConcentrationAt(this.data.records, this.data.medicines, this.data.profile.weight, d));
+        points.push(this.computeConcentrationFromRecord(this.data.lastRecord, d));
       }
     } else {
       for (let i = 6; i >= 0; i -= 1) {
         const d = new Date(now.getTime() - i * 24 * 3600000);
         labels.push(`${d.getMonth() + 1}/${d.getDate()}`);
-        points.push(calcConcentrationAt(this.data.records, this.data.medicines, this.data.profile.weight, d));
+        points.push(this.computeConcentrationFromRecord(this.data.lastRecord, d));
       }
     }
 

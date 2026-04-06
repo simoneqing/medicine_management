@@ -1,22 +1,18 @@
 const PROFILE_STORAGE_KEY = 'medicine_profile_mock_v1';
+const DEFAULT_USER_ID = 'u_demo_001';
 
 function pad(n) { return `${n}`.padStart(2, '0'); }
-function toDateTimeInput(date) { return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`; }
-function formatDateTime(date) { return `${date.getMonth()+1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}`; }
-function calcDoseByCounts(counts) { return Object.entries(counts).reduce((s,[k,v]) => s + Number(k) * Number(v||0), 0); }
+function toDateTimeInput(date) { return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`; }
+function formatDateTime(date) { return `${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}`; }
+function calcDoseByCounts(counts) { return Object.entries(counts || {}).reduce((s, [k, v]) => s + Number(k) * Number(v || 0), 0); }
 function calcExpectedRise(total, weight, rr) { return weight <= 0 ? 0 : (total / weight) * rr; }
 
 Page({
   data: {
+    userId: DEFAULT_USER_ID,
     profile: { weight: 68 },
-    medicines: [
-      { id: 'm1', brand: '果纳芬', recoveryRate: 2, unit: 'IU', specs: [150,300,600] },
-      { id: 'm2', brand: '普丽康', recoveryRate: 1.8, unit: 'IU', specs: [50,100,200] }
-    ],
-    records: [
-      { id: 'r1', medicineId: 'm1', timestamp: '2026-03-28T08:30:00+08:00', counts: { '150': 1 } },
-      { id: 'r2', medicineId: 'm2', timestamp: '2026-03-15T09:20:00+08:00', counts: { '100': 2 } }
-    ],
+    medicines: [],
+    records: [],
     stats: { total: 0, year: 0 },
     filterMode: 'week',
     customStart: '2026-03-01',
@@ -28,26 +24,44 @@ Page({
     selectedMedicineIndex: 0,
     medicineOptions: [],
     specInputs: [],
-    calc: { totalDose: '0', weight: '68 kg', recoveryRate: '0', expectedRise: '0', detail: '' },
+    calc: { totalDose: '0 IU', weight: '68 kg', recoveryRate: '0', expectedRise: '0', detail: '' },
     lastAddedId: ''
   },
 
   onLoad(options) {
-    this.loadProfileFromStorage();
-    const medicines = this.data.medicines;
-    this.setData({ medicineOptions: medicines, formTime: toDateTimeInput(new Date()) });
-    this.resetSpecInputs();
-    this.refreshStatsAndList();
-    if (options.openAdd === '1') this.openAddForm();
+    this.setData({ formTime: toDateTimeInput(new Date()) });
+    this.initCloudData().then(() => {
+      if (options.openAdd === '1') this.openAddForm();
+    });
   },
 
   onShow() {
-    const oldWeight = this.data.profile.weight;
     this.loadProfileFromStorage();
-    if (this.data.profile.weight !== oldWeight) {
-      this.refreshStatsAndList();
-      this.recalcForm();
+    this.refreshStatsAndList();
+    this.recalcForm();
+  },
+
+  async initCloudData() {
+    await Promise.all([this.loadProfileFromCloud(), this.loadMedicinesFromCloud(), this.loadRecordsFromCloud()]);
+    this.refreshStatsAndList();
+    this.resetSpecInputs();
+  },
+
+  async loadProfileFromCloud() {
+    const db = wx.cloud.database();
+    try {
+      const res = await db.collection('users').doc(this.data.userId).get();
+      const w = Number(res.data?.weight);
+      if (Number.isFinite(w) && w > 0 && w <= 300) {
+        const profile = { ...this.data.profile, weight: Number(w.toFixed(1)) };
+        this.setData({ profile });
+        wx.setStorageSync(PROFILE_STORAGE_KEY, profile);
+        return;
+      }
+    } catch (e) {
+      // ignore and fallback local cache
     }
+    this.loadProfileFromStorage();
   },
 
   loadProfileFromStorage() {
@@ -58,44 +72,85 @@ Page({
     this.setData({ profile: { ...this.data.profile, weight: Number(nextWeight.toFixed(1)) } });
   },
 
+  async loadMedicinesFromCloud() {
+    const db = wx.cloud.database();
+    const res = await db.collection('medicines').get();
+    const medicines = (res.data || []).map((m) => ({
+      id: m._id,
+      brand: m.brand || m.name || '未知药品',
+      recoveryRate: Number(m.recoveryRate ?? m.xValue ?? 2),
+      unit: m.unit || 'IU',
+      specs: Array.isArray(m.specs) ? m.specs.map(Number).filter((x) => Number.isFinite(x) && x > 0).sort((a, b) => a - b) : []
+    }));
+
+    this.setData({
+      medicines,
+      medicineOptions: medicines,
+      selectedMedicineIndex: 0
+    });
+  },
+
+  async loadRecordsFromCloud() {
+    const db = wx.cloud.database();
+    const _ = db.command;
+    const res = await db.collection('medRecords')
+      .where({ userId: this.data.userId, timestamp: _.exists(true) })
+      .get();
+
+    const records = (res.data || []).map((r) => ({
+      id: r._id,
+      medicineId: r.medicineId,
+      timestamp: Number(r.timestamp),
+      dose: Number(r.dose || 0),
+      counts: r.counts && typeof r.counts === 'object' ? r.counts : {},
+      createdAt: Number(r.createdAt || r.timestamp || 0)
+    }));
+
+    this.setData({ records });
+  },
+
   switchFilter(e) { this.setData({ filterMode: e.currentTarget.dataset.mode }, this.refreshStatsAndList); },
   onCustomStart(e) { this.setData({ customStart: e.detail.value }, this.refreshStatsAndList); },
   onCustomEnd(e) { this.setData({ customEnd: e.detail.value }, this.refreshStatsAndList); },
 
   getFilteredRecords() {
-    const now = new Date();
+    const now = Date.now();
     const rows = [...this.data.records];
     if (this.data.filterMode === 'week') {
-      const from = new Date(now.getTime() - 7 * 24 * 3600000);
-      return rows.filter((r) => new Date(r.timestamp) >= from);
+      const from = now - 7 * 24 * 3600000;
+      return rows.filter((r) => Number(r.timestamp) >= from);
     }
     if (this.data.filterMode === 'month') {
-      const from = new Date(now.getTime() - 30 * 24 * 3600000);
-      return rows.filter((r) => new Date(r.timestamp) >= from);
+      const from = now - 30 * 24 * 3600000;
+      return rows.filter((r) => Number(r.timestamp) >= from);
     }
-    const from = new Date(`${this.data.customStart}T00:00:00`);
-    const to = new Date(`${this.data.customEnd}T23:59:59`);
-    return rows.filter((r) => { const t = new Date(r.timestamp); return t >= from && t <= to; });
+    const from = new Date(`${this.data.customStart}T00:00:00`).getTime();
+    const to = new Date(`${this.data.customEnd}T23:59:59`).getTime();
+    return rows.filter((r) => Number(r.timestamp) >= from && Number(r.timestamp) <= to);
   },
 
   refreshStatsAndList() {
     const total = this.data.records.length;
     const year = new Date().getFullYear();
-    const yearCount = this.data.records.filter((r) => new Date(r.timestamp).getFullYear() === year).length;
+    const yearCount = this.data.records.filter((r) => new Date(Number(r.timestamp)).getFullYear() === year).length;
 
     const filteredRecords = this.getFilteredRecords()
-      .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
       .map((r) => {
         const med = this.data.medicines.find((m) => m.id === r.medicineId) || {};
-        const totalDose = calcDoseByCounts(r.counts);
-        const rise = Math.round(calcExpectedRise(totalDose, this.data.profile.weight, med.recoveryRate || 0));
+        const fromCounts = calcDoseByCounts(r.counts);
+        const totalDoseVal = fromCounts > 0 ? fromCounts : Number(r.dose || 0);
+        const rise = Math.round(calcExpectedRise(totalDoseVal, this.data.profile.weight, Number(med.recoveryRate || 0)));
+        const specText = fromCounts > 0
+          ? Object.entries(r.counts).map(([s, c]) => `${s}${med.unit || ''}×${c}`).join(' + ')
+          : `总剂量记录 ${totalDoseVal.toFixed(2)} ${med.unit || 'IU'}`;
         return {
           ...r,
           isNew: r.id === this.data.lastAddedId,
-          timeText: formatDateTime(new Date(r.timestamp)),
+          timeText: formatDateTime(new Date(Number(r.timestamp))),
           brand: med.brand || '未知药品',
-          specText: Object.entries(r.counts).map(([s,c]) => `${s}${med.unit||''}×${c}`).join(' + '),
-          totalDose: `${totalDose.toFixed(2)} ${med.unit||''}`,
+          specText,
+          totalDose: `${totalDoseVal.toFixed(2)} ${med.unit || 'IU'}`,
           expectedRise: `${rise}%`
         };
       });
@@ -114,7 +169,11 @@ Page({
 
   resetSpecInputs() {
     const med = this.data.medicines[this.data.selectedMedicineIndex];
-    const specInputs = med.specs.map((s) => ({ spec: s, unit: med.unit, count: 0 }));
+    if (!med) {
+      this.setData({ specInputs: [] });
+      return;
+    }
+    const specInputs = (med.specs || []).map((s) => ({ spec: s, unit: med.unit, count: 0 }));
     this.setData({ specInputs }, this.recalcForm);
   },
 
@@ -129,6 +188,7 @@ Page({
 
   recalcForm() {
     const med = this.data.medicines[this.data.selectedMedicineIndex];
+    if (!med) return;
     const counts = {};
     this.data.specInputs.forEach((i) => { counts[i.spec] = i.count; });
     const totalDose = calcDoseByCounts(counts);
@@ -144,9 +204,14 @@ Page({
     });
   },
 
-  submitRecord() {
+  async submitRecord() {
     if (this.data.submitting) return;
     const med = this.data.medicines[this.data.selectedMedicineIndex];
+    if (!med) {
+      wx.showToast({ title: '请先维护药品数据', icon: 'none' });
+      return;
+    }
+
     const counts = {};
     this.data.specInputs.forEach((i) => { if (i.count > 0) counts[i.spec] = i.count; });
     if (!Object.keys(counts).length) {
@@ -154,20 +219,40 @@ Page({
       return;
     }
 
+    const totalDose = calcDoseByCounts(counts);
+    const timestampMs = new Date(this.data.formTime || new Date()).getTime();
+
     this.setData({ submitting: true });
-    setTimeout(() => {
-      const id = `r_${Date.now()}`;
-      const record = {
-        id,
-        medicineId: med.id,
-        timestamp: new Date(this.data.formTime || new Date()).toISOString(),
-        counts
-      };
-      this.data.records.push(record);
-      this.setData({ submitting: false, showAddForm: false, lastAddedId: id }, () => {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'addMedicineRecord',
+        data: {
+          userId: this.data.userId,
+          medicineId: med.id,
+          dose: totalDose,
+          timestamp: timestampMs,
+          counts,
+          createdAt: Date.now()
+        }
+      });
+
+      if (!res.result?.success) {
+        throw new Error(res.result?.message || '新增失败');
+      }
+
+      await this.loadRecordsFromCloud();
+      const latest = [...this.data.records].sort((a, b) => Number(b.createdAt) - Number(a.createdAt))[0];
+      this.setData({
+        submitting: false,
+        showAddForm: false,
+        lastAddedId: latest?.id || ''
+      }, () => {
         this.refreshStatsAndList();
         wx.showToast({ title: '新增成功', icon: 'success' });
       });
-    }, 500);
+    } catch (e) {
+      this.setData({ submitting: false });
+      wx.showToast({ title: e.message || '新增失败', icon: 'none' });
+    }
   }
 });

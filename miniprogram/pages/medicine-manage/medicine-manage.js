@@ -13,17 +13,29 @@ Page({
     }
   },
 
-  onLoad() {
-    this.setData({
-      medicines: this.formatMedicines([
-        { id: 'm1', brand: '果纳芬', halfLife: 26, recoveryRate: 2, unit: 'IU', specs: [150, 300, 600] },
-        { id: 'm2', brand: '普丽康', halfLife: 24, recoveryRate: 1.8, unit: 'IU', specs: [50, 100, 200] }
-      ])
-    });
+  async onLoad() {
+    await this.loadMedicines();
   },
 
   formatMedicines(list) {
-    return list.map((m) => ({ ...m, specText: `${[...m.specs].sort((a,b)=>a-b).join(' / ')} ${m.unit}` }));
+    return list.map((m) => ({
+      ...m,
+      specText: `${[...m.specs].sort((a, b) => a - b).join(' / ')} ${m.unit}`
+    }));
+  },
+
+  async loadMedicines() {
+    const db = wx.cloud.database();
+    const res = await db.collection('medicines').get();
+    const medicines = (res.data || []).map((m) => ({
+      id: m._id,
+      brand: m.brand || m.name || '',
+      halfLife: Number(m.halfLife || 0),
+      recoveryRate: Number(m.recoveryRate ?? m.xValue ?? 0),
+      unit: m.unit || 'IU',
+      specs: Array.isArray(m.specs) ? m.specs.map(Number).filter((x) => Number.isFinite(x) && x > 0).sort((a, b) => a - b) : []
+    }));
+    this.setData({ medicines: this.formatMedicines(medicines) });
   },
 
   onInput(e) {
@@ -81,7 +93,7 @@ Page({
     });
   },
 
-  saveMedicine() {
+  async saveMedicine() {
     const { brand, halfLife, recoveryRate, unit, specs } = this.data.form;
     const cleanUnit = (unit || 'IU').trim() || 'IU';
     const cleanSpecs = specs.map(Number).filter((x) => Number.isFinite(x) && x > 0).sort((a, b) => a - b);
@@ -91,18 +103,31 @@ Page({
       return;
     }
 
-    let next = [...this.data.medicines];
-    if (this.data.editingId) {
-      next = next.map((m) => (m.id === this.data.editingId
-        ? { ...m, brand, halfLife: Number(halfLife), recoveryRate: Number(recoveryRate), unit: cleanUnit, specs: cleanSpecs }
-        : m));
-      this.setData({ statusText: '药品更新成功（mock）。' });
-    } else {
-      next.push({ id: `m_${Date.now()}`, brand, halfLife: Number(halfLife), recoveryRate: Number(recoveryRate), unit: cleanUnit, specs: cleanSpecs });
-      this.setData({ statusText: '药品新增成功（mock）。' });
-    }
+    const payload = {
+      brand,
+      name: brand,
+      halfLife: Number(halfLife),
+      recoveryRate: Number(recoveryRate),
+      xValue: Number(recoveryRate),
+      unit: cleanUnit,
+      specs: cleanSpecs,
+      updatedAt: Date.now()
+    };
 
-    this.setData({ medicines: this.formatMedicines(next) });
-    this.resetForm();
+    const db = wx.cloud.database();
+    try {
+      if (this.data.editingId) {
+        await db.collection('medicines').doc(this.data.editingId).update({ data: payload });
+        this.setData({ statusText: '药品更新成功。' });
+      } else {
+        await db.collection('medicines').add({ data: { ...payload, createdAt: Date.now() } });
+        this.setData({ statusText: '药品新增成功。' });
+      }
+
+      await this.loadMedicines();
+      this.resetForm();
+    } catch (e) {
+      this.setData({ statusText: `保存失败：${e.message || '请稍后重试'}` });
+    }
   }
 });
