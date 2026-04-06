@@ -22,11 +22,11 @@
     </view>
   </view>
 
-  <view class="card">
-    <view class="list-head">
-      <view class="label">历史记录</view>
-      <button size="mini" type="primary" bindtap="openAddForm">+ 新增</button>
-    </view>
+    <view class="card">
+      <view class="list-head">
+        <view class="label">历史记录</view>
+        <button class="add-inline" bindtap="openAddForm">+ 新增记录</button>
+      </view>
     <block wx:for="{{filteredRecords}}" wx:key="id">
       <view class="item {{item.isNew ? 'new-item' : ''}}">
         <view class="item-head">
@@ -73,5 +73,5 @@
     </view>
   </view>
 
-  <button class="fab" bindtap="openAddForm">＋</button>
+  <button wx:if="{{!showAddForm}}" class="fab" bindtap="openAddForm">＋</button>
 </view>
