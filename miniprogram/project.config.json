@@ -19,8 +19,8 @@
     "uploadWithSourceMap": true,
     "compileHotReLoad": true,
     "lazyloadPlaceholderEnable": false,
-    "useMultiFrameRuntime": true,
-    "useApiHook": true,
+    "useMultiFrameRuntime": false,
+    "useApiHook": false,
     "babelSetting": {
       "ignore": [],
       "disablePlugins": [],
@@ -28,7 +28,7 @@
     }
   },
   "compileType": "miniprogram",
-  "libVersion": "trial",
+  "libVersion": "stable",
   "simulatorType": "wechat",
   "condition": {}
 }
