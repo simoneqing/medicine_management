@@ -198,5 +198,6 @@ Page({
 
   handleAddRecord() { wx.navigateTo({ url: '/pages/history/history?openAdd=1' }); },
   handleViewHistory() { wx.navigateTo({ url: '/pages/history/history' }); },
+  handleViewMedicine() { wx.navigateTo({ url: '/pages/medicine-manage/medicine-manage' }); },
   handleViewProfile() { wx.navigateTo({ url: '/pages/profile/profile' }); }
 });

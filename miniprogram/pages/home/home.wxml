@@ -39,6 +39,7 @@
   <view class="actions">
     <button class="action primary" bindtap="handleAddRecord">新增用药记录</button>
     <button class="action" bindtap="handleViewHistory">查看历史记录</button>
+    <button class="action" bindtap="handleViewMedicine">药品维护</button>
     <button class="action" bindtap="handleViewProfile">个人信息</button>
   </view>
 </view>
