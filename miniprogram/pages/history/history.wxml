@@ -1,0 +1,77 @@
+<view class="container">
+  <view class="card">
+    <view class="title">历史记录工作台</view>
+    <view class="muted">历史记录主页面，支持筛选与新增闭环</view>
+  </view>
+
+  <view class="grid-two">
+    <view class="card"><view class="label">历史总用药次数</view><view class="value">{{stats.total}} 次</view></view>
+    <view class="card"><view class="label">本年用药次数</view><view class="value">{{stats.year}} 次</view></view>
+  </view>
+
+  <view class="card">
+    <view class="label">时间筛选</view>
+    <view class="filters">
+      <view class="filter {{filterMode==='week'?'active':''}}" data-mode="week" bindtap="switchFilter">本周</view>
+      <view class="filter {{filterMode==='month'?'active':''}}" data-mode="month" bindtap="switchFilter">本月</view>
+      <view class="filter {{filterMode==='custom'?'active':''}}" data-mode="custom" bindtap="switchFilter">自定义</view>
+    </view>
+    <view wx:if="{{filterMode==='custom'}}" class="custom-wrap">
+      <picker mode="date" value="{{customStart}}" bindchange="onCustomStart"><view class="picker">开始：{{customStart}}</view></picker>
+      <picker mode="date" value="{{customEnd}}" bindchange="onCustomEnd"><view class="picker">结束：{{customEnd}}</view></picker>
+    </view>
+  </view>
+
+    <view class="card">
+      <view class="list-head">
+        <view class="label">历史记录</view>
+        <button class="add-inline" bindtap="openAddForm">+ 新增记录</button>
+      </view>
+    <block wx:for="{{filteredRecords}}" wx:key="id">
+      <view class="item {{item.isNew ? 'new-item' : ''}}">
+        <view class="item-head">
+          <text>{{item.timeText}}</text>
+          <text>{{item.brand}} <text wx:if="{{item.isNew}}" class="new-tag">刚刚新增</text></text>
+        </view>
+        <view class="muted">规格组合：{{item.specText}}</view>
+        <view class="muted">总剂量：{{item.totalDose}}</view>
+        <view class="muted">预计提升浓度：{{item.expectedRise}}</view>
+      </view>
+    </block>
+  </view>
+
+  <view wx:if="{{showAddForm}}" class="drawer">
+    <view class="drawer-panel">
+      <view class="drawer-head"><view class="label">新增用药记录</view><text class="close-text" bindtap="closeAddForm">关闭</text></view>
+      <view class="field"><text>用药时间</text><input type="datetime-local" value="{{formTime}}" bindinput="onFormTime"/></view>
+      <view class="field"><text>药品品牌</text>
+        <picker range="{{medicineOptions}}" range-key="brand" value="{{selectedMedicineIndex}}" bindchange="onMedicineChange">
+          <view class="picker">{{medicineOptions.length ? medicineOptions[selectedMedicineIndex].brand : '请先维护药品'}}</view>
+        </picker>
+      </view>
+      <view class="muted">本次使用规格（未使用的规格保持为 0）</view>
+      <block wx:for="{{specInputs}}" wx:key="spec">
+        <view class="spec-row">
+          <text>{{item.spec}} {{item.unit}}</text>
+          <view class="stepper">
+            <button size="mini" data-index="{{index}}" data-op="minus" bindtap="stepSpec">-</button>
+            <text class="count">{{item.count}}</text>
+            <button size="mini" data-index="{{index}}" data-op="plus" bindtap="stepSpec">+</button>
+          </view>
+        </view>
+      </block>
+
+      <view class="card compact">
+        <view class="muted">总剂量：{{calc.totalDose}}</view>
+        <view class="muted">当前体重：{{calc.weight}}</view>
+        <view class="muted">回收率：{{calc.recoveryRate}}</view>
+        <view class="muted">预计提升浓度：{{calc.expectedRise}}%</view>
+        <view class="muted">计算明细：{{calc.detail}}</view>
+      </view>
+
+      <view class="drawer-footer"><button type="primary" loading="{{submitting}}" bindtap="submitRecord">{{submitting ? '提交中...' : '提交记录'}}</button></view>
+    </view>
+  </view>
+
+  <button wx:if="{{!showAddForm}}" class="fab" bindtap="openAddForm">＋</button>
+</view>
