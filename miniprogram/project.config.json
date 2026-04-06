@@ -28,7 +28,7 @@
     }
   },
   "compileType": "miniprogram",
-  "libVersion": "stable",
+  "libVersion": "latest",
   "simulatorType": "wechat",
   "condition": {}
 }
