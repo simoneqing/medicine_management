@@ -19,6 +19,12 @@
 - 在微信开发者工具中，选择导入项目目录：`miniprogram/`。
 - `appid`、`project.config.json`、`app.json`、`cloudfunctions/` 均在该目录中，后续可直接开发和部署云函数。
 
+## 云函数部署提示
+
+1. 首次部署请右键每个云函数目录，选择“上传并部署：云端安装依赖”。
+2. 若日志报错 `Cannot find module 'wx-server-sdk'`，说明依赖未安装成功，请重新选择“云端安装依赖”部署。
+3. 本仓库已为每个云函数提供独立 `package.json`，包含 `wx-server-sdk` 依赖。
+
 
 ## 常见问题排查（merge 后页面无变化）
 
