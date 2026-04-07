@@ -2,8 +2,9 @@ const PROFILE_STORAGE_KEY = 'medicine_profile_mock_v1';
 const DEFAULT_USER_ID = 'u_demo_001';
 
 function pad(n) { return `${n}`.padStart(2, '0'); }
-function toDateTimeInput(date) { return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`; }
 function formatDateTime(date) { return `${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}`; }
+function toDateValue(date) { return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`; }
+function toTimeValue(date) { return `${pad(date.getHours())}:${pad(date.getMinutes())}`; }
 function calcDoseByCounts(counts) { return Object.entries(counts || {}).reduce((s, [k, v]) => s + Number(k) * Number(v || 0), 0); }
 function calcExpectedRise(total, weight, rr) { return weight <= 0 ? 0 : (total / weight) * rr; }
 
@@ -20,7 +21,8 @@ Page({
     filteredRecords: [],
     showAddForm: false,
     submitting: false,
-    formTime: '',
+    formDate: '',
+    formClock: '',
     selectedMedicineIndex: 0,
     medicineOptions: [],
     specInputs: [],
@@ -29,7 +31,8 @@ Page({
   },
 
   onLoad(options) {
-    this.setData({ formTime: toDateTimeInput(new Date()) });
+    const now = new Date();
+    this.setData({ formDate: toDateValue(now), formClock: toTimeValue(now) });
     this.initCloudData().then(() => {
       if (options.openAdd === '1') this.openAddForm();
     });
@@ -91,13 +94,13 @@ Page({
   },
 
   async loadRecordsFromCloud() {
-    const db = wx.cloud.database();
-    const _ = db.command;
-    const res = await db.collection('medRecords')
-      .where({ userId: this.data.userId, timestamp: _.exists(true) })
-      .get();
+    const res = await wx.cloud.callFunction({
+      name: 'getHistoryRecords',
+      data: { userId: this.data.userId }
+    });
+    const rows = res.result?.success ? (res.result.data || []) : [];
 
-    const records = (res.data || []).map((r) => ({
+    const records = rows.map((r) => ({
       id: r._id,
       medicineId: r.medicineId,
       timestamp: Number(r.timestamp),
@@ -135,7 +138,11 @@ Page({
     const yearCount = this.data.records.filter((r) => new Date(Number(r.timestamp)).getFullYear() === year).length;
 
     const filteredRecords = this.getFilteredRecords()
-      .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
+      .sort((a, b) => {
+        const tsDiff = Number(b.timestamp || 0) - Number(a.timestamp || 0);
+        if (tsDiff !== 0) return tsDiff;
+        return Number(b.createdAt || 0) - Number(a.createdAt || 0);
+      })
       .map((r) => {
         const med = this.data.medicines.find((m) => m.id === r.medicineId) || {};
         const fromCounts = calcDoseByCounts(r.counts);
@@ -158,9 +165,13 @@ Page({
     this.setData({ stats: { total, year: yearCount }, filteredRecords });
   },
 
-  openAddForm() { this.setData({ showAddForm: true, formTime: toDateTimeInput(new Date()) }); },
+  openAddForm() {
+    const now = new Date();
+    this.setData({ showAddForm: true, formDate: toDateValue(now), formClock: toTimeValue(now) });
+  },
   closeAddForm() { this.setData({ showAddForm: false }); },
-  onFormTime(e) { this.setData({ formTime: e.detail.value }); },
+  onFormDate(e) { this.setData({ formDate: e.detail.value }); },
+  onFormClock(e) { this.setData({ formClock: e.detail.value }); },
 
   onMedicineChange(e) {
     this.setData({ selectedMedicineIndex: Number(e.detail.value) });
@@ -220,7 +231,8 @@ Page({
     }
 
     const totalDose = calcDoseByCounts(counts);
-    const timestampMs = new Date(this.data.formTime || new Date()).getTime();
+    const datetimeText = `${this.data.formDate}T${this.data.formClock || '00:00'}:00`;
+    const timestampMs = new Date(datetimeText).getTime();
 
     this.setData({ submitting: true });
     try {
