@@ -11,18 +11,6 @@
 .custom-wrap { margin-top:10rpx; display:grid; gap:8rpx; }
 .picker { padding:10rpx; border:1px solid #e5e7eb; border-radius:10rpx; background: #fff; }
 .list-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10rpx; gap: 12rpx; }
-.add-inline {
-  margin: 0;
-  padding: 0 20rpx;
-  height: 58rpx;
-  line-height: 58rpx;
-  font-size: 24rpx;
-  border-radius: 12rpx;
-  background: #34c97b;
-  color: #fff;
-  border: none;
-}
-.add-inline::after { border: none; }
 .item { border:1px solid #e5e7eb; border-radius:12rpx; padding:12rpx; margin-bottom:10rpx; }
 .item-head { display:flex; justify-content:space-between; font-size:24rpx; }
 .new-item { border-color:#6dd7a1; background:#f0fff6; }
@@ -34,14 +22,15 @@
 .compact { margin:10rpx 0; }
 .fab {
   position: fixed;
-  right: 24rpx;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: calc(env(safe-area-inset-bottom) + 24rpx);
   margin: 0;
   padding: 0;
-  width: 84rpx;
+  width: 220rpx;
   height: 84rpx;
   line-height: 84rpx;
-  border-radius: 42rpx;
+  border-radius: 999rpx;
   background:#34c97b;
   color:#fff;
   font-size:48rpx;

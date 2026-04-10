@@ -22,6 +22,10 @@ Page({
     this.refreshHomeCloudData();
   },
 
+  onReady() {
+    this.drawChart();
+  },
+
   onShow() {
     this.loadProfileFromStorage();
     this.refreshHomeCloudData();
@@ -96,18 +100,18 @@ Page({
       const nowConc = this.computeConcentrationFromRecord(this.data.lastRecord, new Date());
       this.setData({ currentConcentration: nowConc.toFixed(1) });
       this.buildChartData(this.data.chartMode);
-      this.drawChart();
+      wx.nextTick(() => this.drawChart());
     });
   },
 
   switchToDay() {
     this.buildChartData('day');
-    this.drawChart();
+    wx.nextTick(() => this.drawChart());
   },
 
   switchToWeek() {
     this.buildChartData('week');
-    this.drawChart();
+    wx.nextTick(() => this.drawChart());
   },
 
   buildChartData(mode) {
@@ -132,11 +136,16 @@ Page({
     this.setData({ chartMode: mode, chartData: { labels, points } });
   },
 
-  drawChart() {
+  drawChart(retry = 0) {
     const query = wx.createSelectorQuery();
     query.select('#chartCanvas').fields({ node: true, size: true }).exec((res) => {
       const canvas = res[0] && res[0].node;
-      if (!canvas) return;
+      if (!canvas || !res[0].width || !res[0].height) {
+        if (retry < 6) {
+          setTimeout(() => this.drawChart(retry + 1), 80);
+        }
+        return;
+      }
       const ctx = canvas.getContext('2d');
       const deviceInfo = wx.getDeviceInfo();
       const dpr = deviceInfo.pixelRatio;
