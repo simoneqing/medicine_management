@@ -1,4 +1,5 @@
 const PROFILE_STORAGE_KEY = 'medicine_profile_mock_v1';
+const HISTORY_CACHE_KEY = 'medicine_history_records_cache_v1';
 const DEFAULT_USER_ID = 'u_demo_001';
 
 function pad(n) { return `${n}`.padStart(2, '0'); }
@@ -33,6 +34,7 @@ Page({
   onLoad(options) {
     const now = new Date();
     this.setData({ formDate: toDateValue(now), formClock: toTimeValue(now) });
+    this.loadRecordsFromCache();
     this.initCloudData().then(() => {
       if (options.openAdd === '1') this.openAddForm();
     });
@@ -119,7 +121,18 @@ Page({
       createdAt: Number(r.createdAt || r.timestamp || 0)
     }));
 
+    if (!records.length && this.data.records.length) {
+      return;
+    }
+
     this.setData({ records });
+    wx.setStorageSync(HISTORY_CACHE_KEY, records);
+  },
+
+  loadRecordsFromCache() {
+    const cached = wx.getStorageSync(HISTORY_CACHE_KEY);
+    if (!Array.isArray(cached) || !cached.length) return;
+    this.setData({ records: cached }, this.refreshStatsAndList);
   },
 
   switchFilter(e) { this.setData({ filterMode: e.currentTarget.dataset.mode }, this.refreshStatsAndList); },
@@ -277,6 +290,7 @@ Page({
         showAddForm: false,
         lastAddedId: localId
       }, () => {
+        wx.setStorageSync(HISTORY_CACHE_KEY, this.data.records);
         this.refreshStatsAndList();
         wx.showToast({ title: '新增成功', icon: 'success' });
       });
