@@ -98,7 +98,17 @@ Page({
       name: 'getWeeklyStats',
       data: { userId: this.data.userId, days: 36500, withRecords: true }
     });
-    const rows = res.result?.success ? (res.result.data?.records || []) : [];
+    let rows = res.result?.success ? (res.result.data?.records || []) : [];
+
+    // 兼容：如果云端仍是旧版 getWeeklyStats（未返回 records），回退到客户端直查
+    if (!rows.length && !Array.isArray(res.result?.data?.records)) {
+      const db = wx.cloud.database();
+      const _ = db.command;
+      const direct = await db.collection('medRecords')
+        .where({ userId: this.data.userId, timestamp: _.exists(true) })
+        .get();
+      rows = direct.data || [];
+    }
 
     const records = rows.map((r) => ({
       id: r._id,
@@ -252,16 +262,27 @@ Page({
         throw new Error(res.result?.message || '新增失败');
       }
 
-      await this.loadRecordsFromCloud();
-      const latest = [...this.data.records].sort((a, b) => Number(b.createdAt) - Number(a.createdAt))[0];
+      const localId = `local_${Date.now()}`;
+      const localRecord = {
+        id: localId,
+        medicineId: med.id,
+        timestamp: timestampMs,
+        dose: totalDose,
+        counts,
+        createdAt: Date.now()
+      };
       this.setData({
+        records: [localRecord, ...this.data.records],
         submitting: false,
         showAddForm: false,
-        lastAddedId: latest?.id || ''
+        lastAddedId: localId
       }, () => {
         this.refreshStatsAndList();
         wx.showToast({ title: '新增成功', icon: 'success' });
       });
+
+      // 后台再同步一次云端最终结果（包含真实 _id）
+      this.loadRecordsFromCloud().then(() => this.refreshStatsAndList());
     } catch (e) {
       this.setData({ submitting: false });
       wx.showToast({ title: e.message || '新增失败', icon: 'none' });
