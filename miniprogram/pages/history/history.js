@@ -95,10 +95,10 @@ Page({
 
   async loadRecordsFromCloud() {
     const res = await wx.cloud.callFunction({
-      name: 'getHistoryRecords',
-      data: { userId: this.data.userId }
+      name: 'getWeeklyStats',
+      data: { userId: this.data.userId, days: 36500, withRecords: true }
     });
-    const rows = res.result?.success ? (res.result.data || []) : [];
+    const rows = res.result?.success ? (res.result.data?.records || []) : [];
 
     const records = rows.map((r) => ({
       id: r._id,
