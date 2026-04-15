@@ -3,3 +3,11 @@ page {
   color: #1f2a37;
   font-size: 28rpx;
 }
+
+button[type='primary'] {
+  background: #7C7AF7;
+}
+
+button[type='primary']:active {
+  background: #6A68E6;
+}
