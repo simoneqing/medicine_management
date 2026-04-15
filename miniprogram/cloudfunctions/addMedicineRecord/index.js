@@ -11,6 +11,8 @@ exports.main = async (event) => {
   }
 
   const createdAt = Number(event.createdAt || Date.now());
+  const expectedRise = Number(event.expectedRise);
+  const weightSnapshot = Number(event.weightSnapshot);
   await db.collection('medRecords').add({
     data: {
       userId,
@@ -18,7 +20,9 @@ exports.main = async (event) => {
       dose: Number(dose),
       timestamp: Number(timestamp),
       counts: counts && typeof counts === 'object' ? counts : {},
-      createdAt
+      createdAt,
+      expectedRise: Number.isFinite(expectedRise) ? Number(expectedRise.toFixed(2)) : null,
+      weightSnapshot: Number.isFinite(weightSnapshot) ? Number(weightSnapshot.toFixed(1)) : null
     }
   });
 

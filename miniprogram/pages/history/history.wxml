@@ -35,6 +35,19 @@
         <view class="muted">规格组合：{{item.specText}}</view>
         <view class="muted">总剂量：{{item.totalDose}}</view>
         <view class="muted">预计提升浓度：{{item.expectedRise}}</view>
+        <view class="item-actions" wx:if="{{item.canDelete}}">
+          <button
+            class="delete-btn"
+            size="mini"
+            type="warn"
+            data-id="{{item.id}}"
+            loading="{{deletingId===item.id}}"
+            disabled="{{deletingId===item.id}}"
+            bindtap="onDeleteRecord"
+          >
+            删除
+          </button>
+        </view>
       </view>
     </block>
   </view>

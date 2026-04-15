@@ -15,6 +15,7 @@ Page({
     profile: { weight: 68 },
     medicines: [],
     records: [],
+    recordsCalcBaseWeight: 68,
     stats: { total: 0, year: 0 },
     filterMode: 'week',
     customStart: '2026-03-01',
@@ -22,6 +23,7 @@ Page({
     filteredRecords: [],
     showAddForm: false,
     submitting: false,
+    deletingId: '',
     formDate: '',
     formClock: '',
     selectedMedicineIndex: 0,
@@ -118,14 +120,16 @@ Page({
       timestamp: Number(r.timestamp),
       dose: Number(r.dose || 0),
       counts: r.counts && typeof r.counts === 'object' ? r.counts : {},
-      createdAt: Number(r.createdAt || r.timestamp || 0)
+      createdAt: Number(r.createdAt || r.timestamp || 0),
+      expectedRise: Number.isFinite(Number(r.expectedRise)) ? Number(r.expectedRise) : null,
+      weightSnapshot: Number.isFinite(Number(r.weightSnapshot)) ? Number(r.weightSnapshot) : null
     }));
 
     if (!records.length && this.data.records.length) {
       return;
     }
 
-    this.setData({ records });
+    this.setData({ records, recordsCalcBaseWeight: Number(this.data.profile.weight || 68) });
     wx.setStorageSync(HISTORY_CACHE_KEY, records);
   },
 
@@ -170,7 +174,18 @@ Page({
         const med = this.data.medicines.find((m) => m.id === r.medicineId) || {};
         const fromCounts = calcDoseByCounts(r.counts);
         const totalDoseVal = fromCounts > 0 ? fromCounts : Number(r.dose || 0);
-        const rise = Math.round(calcExpectedRise(totalDoseVal, this.data.profile.weight, Number(med.recoveryRate || 0)));
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const startOfYesterday = startOfToday - 24 * 3600000;
+        const ts = Number(r.timestamp || 0);
+        const shouldLiveUpdate = ts >= startOfYesterday;
+        const fallbackWeight = Number(r.weightSnapshot || this.data.recordsCalcBaseWeight || this.data.profile.weight);
+        const staticRise = Number.isFinite(Number(r.expectedRise))
+          ? Number(r.expectedRise)
+          : calcExpectedRise(totalDoseVal, fallbackWeight, Number(med.recoveryRate || 0));
+        const rise = Math.round(shouldLiveUpdate
+          ? calcExpectedRise(totalDoseVal, this.data.profile.weight, Number(med.recoveryRate || 0))
+          : staticRise);
         const specText = fromCounts > 0
           ? Object.entries(r.counts).map(([s, c]) => `${s}${med.unit || ''}×${c}`).join(' + ')
           : `总剂量记录 ${totalDoseVal.toFixed(2)} ${med.unit || 'IU'}`;
@@ -181,7 +196,8 @@ Page({
           brand: med.brand || '未知药品',
           specText,
           totalDose: `${totalDoseVal.toFixed(2)} ${med.unit || 'IU'}`,
-          expectedRise: `${rise}%`
+          expectedRise: `${rise}%`,
+          canDelete: Boolean(r.id && !`${r.id}`.startsWith('local_'))
         };
       });
 
@@ -267,7 +283,9 @@ Page({
           dose: totalDose,
           timestamp: timestampMs,
           counts,
-          createdAt: Date.now()
+          createdAt: Date.now(),
+          expectedRise: Number(this.data.calc.expectedRise || 0),
+          weightSnapshot: Number(this.data.profile.weight || 0)
         }
       });
 
@@ -282,7 +300,9 @@ Page({
         timestamp: timestampMs,
         dose: totalDose,
         counts,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        expectedRise: Number(this.data.calc.expectedRise || 0),
+        weightSnapshot: Number(this.data.profile.weight || 0)
       };
       this.setData({
         records: [localRecord, ...this.data.records],
@@ -300,6 +320,38 @@ Page({
     } catch (e) {
       this.setData({ submitting: false });
       wx.showToast({ title: e.message || '新增失败', icon: 'none' });
+    }
+  },
+
+  async onDeleteRecord(e) {
+    const recordId = e.currentTarget.dataset.id;
+    if (!recordId || this.data.deletingId) return;
+    const confirmRes = await wx.showModal({
+      title: '删除记录',
+      content: '确认删除这条用药记录？删除后不可恢复。',
+      confirmColor: '#ef4444'
+    });
+    if (!confirmRes.confirm) return;
+
+    this.setData({ deletingId: recordId });
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'deleteMedicineRecord',
+        data: { userId: this.data.userId, recordId }
+      });
+      if (!res.result?.success) {
+        throw new Error(res.result?.message || '删除失败');
+      }
+
+      const next = this.data.records.filter((r) => r.id !== recordId);
+      this.setData({ records: next, deletingId: '' }, () => {
+        wx.setStorageSync(HISTORY_CACHE_KEY, next);
+        this.refreshStatsAndList();
+      });
+      wx.showToast({ title: '删除成功', icon: 'success' });
+    } catch (err) {
+      this.setData({ deletingId: '' });
+      wx.showToast({ title: err.message || '删除失败', icon: 'none' });
     }
   }
 });

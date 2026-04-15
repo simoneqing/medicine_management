@@ -51,7 +51,9 @@ exports.main = async (event) => {
       dose: Number(r.dose || 0),
       timestamp: Number(r._tsMs || 0),
       counts: r.counts && typeof r.counts === 'object' ? r.counts : {},
-      createdAt: Number(normalizeTs({ timestamp: r.createdAt, createdAt: r.timestamp }) || r._tsMs || 0)
+      createdAt: Number(normalizeTs({ timestamp: r.createdAt, createdAt: r.timestamp }) || r._tsMs || 0),
+      expectedRise: Number.isFinite(Number(r.expectedRise)) ? Number(r.expectedRise) : null,
+      weightSnapshot: Number.isFinite(Number(r.weightSnapshot)) ? Number(r.weightSnapshot) : null
       }));
   }
 

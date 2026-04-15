@@ -13,6 +13,16 @@
 .list-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10rpx; gap: 12rpx; }
 .item { border:1px solid #e5e7eb; border-radius:12rpx; padding:12rpx; margin-bottom:10rpx; }
 .item-head { display:flex; justify-content:space-between; font-size:24rpx; }
+.item-actions { display:flex; justify-content:flex-end; margin-top: 8rpx; }
+.delete-btn {
+  margin: 0;
+  padding: 0 20rpx;
+  height: 54rpx;
+  line-height: 54rpx;
+  font-size: 22rpx;
+  border-radius: 999rpx;
+}
+.delete-btn::after { border: none; }
 .new-item { border-color:#6dd7a1; background:#f0fff6; }
 .new-tag { color:#1d8f59; font-size:20rpx; }
 .drawer { position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:flex-end; z-index: 200; }
