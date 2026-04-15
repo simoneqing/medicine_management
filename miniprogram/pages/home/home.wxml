@@ -1,0 +1,45 @@
+<view class="container">
+  <view class="header">
+    <view class="header-title">用药管理 · 首页</view>
+    <view class="header-subtitle">所有品牌记录统一累计浓度</view>
+  </view>
+
+  <view class="grid-two">
+    <view class="card">
+      <view class="card-title">本周用药统计</view>
+      <view class="row"><text>用药次数</text><text class="value">{{weeklyStats.count}} 次</text></view>
+      <view class="row"><text>总量</text><text class="value">{{weeklyStats.totalDoseIU}} IU</text></view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">本月用药统计</view>
+      <view class="row"><text>用药次数</text><text class="value">{{monthlyStats.count}} 次</text></view>
+      <view class="row"><text>总量</text><text class="value">{{monthlyStats.totalDoseIU}} IU</text></view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">当前因子浓度（统一累计）</view>
+    <view class="conc">{{currentConcentration}} %</view>
+    <view class="muted">纵轴：因子浓度（%） | 横轴：时间</view>
+  </view>
+
+  <view class="card">
+    <view class="card-head">
+      <view class="card-title">因子浓度曲线</view>
+      <view class="tabs">
+        <view class="tab {{chartMode==='day' ? 'active' : ''}}" bindtap="switchToDay">当天</view>
+        <view class="tab {{chartMode==='week' ? 'active' : ''}}" bindtap="switchToWeek">一周</view>
+      </view>
+    </view>
+    <canvas type="2d" id="chartCanvas" canvas-id="chartCanvas" class="chart"></canvas>
+    <view class="muted">纵轴固定：0%~120%，曲线表示因子浓度随时间变化</view>
+  </view>
+
+  <view class="actions">
+    <button class="action primary" bindtap="handleAddRecord">新增用药记录</button>
+    <button class="action" bindtap="handleViewHistory">查看历史记录</button>
+    <button class="action" bindtap="handleViewMedicine">药品维护</button>
+    <button class="action" bindtap="handleViewProfile">个人信息</button>
+  </view>
+</view>
