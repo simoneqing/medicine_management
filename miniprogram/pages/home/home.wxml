@@ -32,7 +32,7 @@
         <view class="tab {{chartMode==='week' ? 'active' : ''}}" bindtap="switchToWeek">一周</view>
       </view>
     </view>
-    <canvas type="2d" id="chartCanvas" class="chart"></canvas>
+    <canvas type="2d" id="chartCanvas" canvas-id="chartCanvas" class="chart"></canvas>
     <view class="muted">纵轴固定：0%~120%，曲线表示血药浓度随时间变化</view>
   </view>
 

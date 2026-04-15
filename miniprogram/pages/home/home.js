@@ -4,11 +4,18 @@ const DEFAULT_USER_ID = 'u_demo_001';
 function clamp(v, min, max) {
   return Math.min(max, Math.max(min, v));
 }
+function normalizeTimestamp(value) {
+  const ts = Number(value || 0);
+  if (!Number.isFinite(ts) || ts <= 0) return 0;
+  return ts < 1e12 ? ts * 1000 : ts;
+}
 
 Page({
   data: {
     userId: DEFAULT_USER_ID,
     profile: { weight: 68 },
+    records: [],
+    medicineMap: {},
     weeklyStats: { count: 0, totalDoseIU: 0 },
     monthlyStats: { count: 0, totalDoseIU: 0 },
     currentConcentration: '0.0',
@@ -48,56 +55,83 @@ Page({
     }
   },
 
-  computeConcentrationFromRecord(record, targetDate) {
-    if (!record) return 0;
-    const tRecord = new Date(record.timestamp).getTime();
-    const tTarget = targetDate.getTime();
-    if (!Number.isFinite(tRecord) || !Number.isFinite(tTarget) || tTarget < tRecord) return 0;
+  computeConcentrationAt(targetMs) {
+    const weight = Math.max(Number(this.data.profile.weight || 60), 1);
+    const records = this.data.records || [];
+    const map = this.data.medicineMap || {};
+    let total = 0;
 
-    const elapsedHours = Math.max(0, (tTarget - tRecord) / 3600000);
-    const dose = Number(record.dose || 0);
-    const weight = Math.max(Number(this.data.profile.weight || record.weight || 60), 1);
-    const xValue = Number(record.xValue || 2);
-    const halfLife = Math.max(Number(record.halfLife || 24), 0.1);
-    const prevConc = Number(record.prevConc || 0);
+    records.forEach((record) => {
+      const tRecord = normalizeTimestamp(record.timestamp || record.createdAt);
+      if (!tRecord || targetMs < tRecord) return;
+      const elapsedHours = Math.max(0, (targetMs - tRecord) / 3600000);
+      const med = map[record.medicineId] || {};
+      const xValue = Number(med.recoveryRate ?? med.xValue ?? 2);
+      const halfLife = Math.max(Number(med.halfLife || 24), 0.1);
+      const dose = Number(record.dose || 0);
+      const start = (dose / weight) * xValue;
+      total += start * Math.pow(0.5, elapsedHours / halfLife);
+    });
 
-    const start = prevConc + (dose / weight) * xValue;
-    const current = start * Math.pow(0.5, elapsedHours / halfLife);
-    return Number(clamp(current, 0, 120).toFixed(1));
+    return Number(clamp(total, 0, 120).toFixed(1));
   },
 
   async refreshHomeCloudData() {
     const userId = this.data.userId;
-    const [weekly, monthly, last] = await Promise.all([
-      this.callCloud('getWeeklyStats', { userId, days: 7 }),
-      this.callCloud('getWeeklyStats', { userId, days: 30 }),
+    const [recordsResult, last] = await Promise.all([
+      this.callCloud('getWeeklyStats', { userId, days: 36500, withRecords: true }),
       this.callCloud('getLastRecord', { userId })
     ]);
+    const db = wx.cloud.database();
+    const medicinesRes = await db.collection('medicines').get().catch(() => ({ data: [] }));
+    const medicineMap = {};
+    (medicinesRes.data || []).forEach((m) => {
+      medicineMap[m._id] = {
+        halfLife: Number(m.halfLife || 24),
+        xValue: Number(m.xValue ?? m.recoveryRate ?? 2),
+        recoveryRate: Number(m.recoveryRate ?? m.xValue ?? 2)
+      };
+    });
 
     const updates = {};
-    if (weekly.success && weekly.data) {
-      updates.weeklyStats = {
-        count: Number(weekly.data.totalDoses || 0),
-        totalDoseIU: Number(weekly.data.totalDoseIU || 0)
-      };
-    }
-    if (monthly.success && monthly.data) {
-      updates.monthlyStats = {
-        count: Number(monthly.data.totalDoses || 0),
-        totalDoseIU: Number(monthly.data.totalDoseIU || 0)
-      };
-    }
+    const rows = recordsResult.success ? (recordsResult.data?.records || []) : [];
+    const records = rows.map((r) => ({
+      ...r,
+      timestamp: normalizeTimestamp(r.timestamp || r.createdAt)
+    })).filter((r) => r.timestamp > 0);
+
+    const now = Date.now();
+    const weekFrom = now - 7 * 24 * 3600000;
+    const monthFrom = now - 30 * 24 * 3600000;
+    const weekRows = records.filter((r) => r.timestamp >= weekFrom);
+    const monthRows = records.filter((r) => r.timestamp >= monthFrom);
+
+    updates.records = records;
+    updates.medicineMap = medicineMap;
+    updates.weeklyStats = {
+      count: weekRows.length,
+      totalDoseIU: Number(weekRows.reduce((sum, r) => sum + Number(r.dose || 0), 0).toFixed(2))
+    };
+    updates.monthlyStats = {
+      count: monthRows.length,
+      totalDoseIU: Number(monthRows.reduce((sum, r) => sum + Number(r.dose || 0), 0).toFixed(2))
+    };
+
     if (last.success && last.data) {
       updates.lastRecord = last.data;
       if (Number.isFinite(Number(last.data.weight)) && Number(last.data.weight) > 0) {
         updates.profile = { ...this.data.profile, weight: Number(last.data.weight) };
       }
-    } else {
+    } else if (records.length > 0) {
+      const sorted = [...records].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+      updates.lastRecord = sorted[0];
+    }
+    if (!updates.lastRecord) {
       updates.lastRecord = null;
     }
 
     this.setData(updates, () => {
-      const nowConc = this.computeConcentrationFromRecord(this.data.lastRecord, new Date());
+      const nowConc = this.computeConcentrationAt(Date.now());
       this.setData({ currentConcentration: nowConc.toFixed(1) });
       this.buildChartData(this.data.chartMode);
       wx.nextTick(() => this.drawChart());
@@ -120,16 +154,18 @@ Page({
     const points = [];
 
     if (mode === 'day') {
-      for (let i = 23; i >= 0; i -= 1) {
-        const d = new Date(now.getTime() - i * 3600000);
+      const dayStart = new Date(now);
+      dayStart.setHours(0, 0, 0, 0);
+      for (let i = 0; i < 24; i += 1) {
+        const d = new Date(dayStart.getTime() + i * 3600000);
         labels.push(`${d.getHours()}时`);
-        points.push(this.computeConcentrationFromRecord(this.data.lastRecord, d));
+        points.push(this.computeConcentrationAt(d.getTime()));
       }
     } else {
-      for (let i = 6; i >= 0; i -= 1) {
-        const d = new Date(now.getTime() - i * 24 * 3600000);
+      for (let i = -2; i <= 4; i += 1) {
+        const d = new Date(now.getTime() + i * 24 * 3600000);
         labels.push(`${d.getMonth() + 1}/${d.getDate()}`);
-        points.push(this.computeConcentrationFromRecord(this.data.lastRecord, d));
+        points.push(this.computeConcentrationAt(d.getTime()));
       }
     }
 
@@ -137,7 +173,7 @@ Page({
   },
 
   drawChart(retry = 0) {
-    const query = wx.createSelectorQuery();
+    const query = this.createSelectorQuery();
     query.select('#chartCanvas').fields({ node: true, size: true }).exec((res) => {
       const canvas = res[0] && res[0].node;
       if (!canvas || !res[0].width || !res[0].height) {
@@ -147,8 +183,12 @@ Page({
         return;
       }
       const ctx = canvas.getContext('2d');
-      const deviceInfo = wx.getDeviceInfo();
-      const dpr = deviceInfo.pixelRatio;
+      let dpr = 1;
+      try {
+        dpr = wx.getDeviceInfo().pixelRatio || 1;
+      } catch (e) {
+        dpr = 1;
+      }
       canvas.width = res[0].width * dpr;
       canvas.height = res[0].height * dpr;
       ctx.scale(dpr, dpr);

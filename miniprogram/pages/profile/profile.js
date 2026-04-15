@@ -13,6 +13,7 @@ function normalizeWeight(value) {
 Page({
   data: {
     userId: DEFAULT_USER_ID,
+    maskedUserId: '',
     profile: { weight: 68 },
     weightInput: '68',
     canSave: true,
@@ -22,6 +23,8 @@ Page({
   },
 
   onLoad() {
+    const tail = this.data.userId.slice(-6);
+    this.setData({ maskedUserId: `***${tail}` });
     this.loadProfile();
   },
 
