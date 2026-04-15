@@ -34,21 +34,9 @@
 }
 
 .value {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8rpx;
-}
-
-.num {
-  font-size: 46rpx;
+  font-size: 40rpx;
   font-weight: 800;
-  color: #7C7AF7;
-  line-height: 1;
-}
-
-.unit-mini {
-  font-size: 22rpx;
-  color: #9CA3AF;
+  color: #34c97b;
 }
 
 .muted {
@@ -79,18 +67,13 @@
 .save-btn {
   border-radius: 16rpx;
   font-size: 30rpx;
-  background: #7C7AF7 !important;
-}
-
-.save-btn:active {
-  background: #6A68E6 !important;
 }
 
 .status {
   margin-top: 16rpx;
   font-size: 24rpx;
-  color: #6A68E6;
-  background: #F3F2FF;
+  color: #1d8f59;
+  background: #ecfdf3;
   border-radius: 12rpx;
   padding: 12rpx 14rpx;
 }

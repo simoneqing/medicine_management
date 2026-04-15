@@ -7,7 +7,7 @@
     </view>
     <view class="current-row">
       <text class="label">当前体重</text>
-      <view class="value"><text class="num">{{profile.weight}}</text><text class="unit-mini">kg</text></view>
+      <text class="value">{{profile.weight}} kg</text>
     </view>
     <view class="muted">体重会影响预计提升浓度与相关计算，请保持更新。</view>
   </view>

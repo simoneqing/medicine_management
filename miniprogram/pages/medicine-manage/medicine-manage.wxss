@@ -10,12 +10,10 @@ input { border: 1px solid #e5e7eb; border-radius: 10rpx; padding: 10rpx 12rpx; f
 .spec-input-wrap { display: flex; align-items: center; gap: 8rpx; }
 .unit-tag { font-size: 24rpx; color: #64748b; }
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10rpx; margin-top: 10rpx; }
-.status { margin-top: 10rpx; background: #F3F2FF; color: #6A68E6; padding: 10rpx; border-radius: 10rpx; font-size: 24rpx; }
+.status { margin-top: 10rpx; background: #ecfdf3; color: #1d8f59; padding: 10rpx; border-radius: 10rpx; font-size: 24rpx; }
 .btn-ghost { background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1; }
 .item { border: 1px solid #e5e7eb; border-radius: 14rpx; padding: 14rpx; margin-bottom: 10rpx; }
 .item-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8rpx; }
 .brand { font-size: 32rpx; font-weight: 700; }
 .spec-main { font-size: 30rpx; font-weight: 700; color: #1f2a37; margin-bottom: 8rpx; }
 .kv { display: flex; justify-content: space-between; font-size: 24rpx; margin-top: 6rpx; }
-button[type='primary'] { background: #7C7AF7; border-radius: 12rpx; }
-button[type='primary']:active { background: #6A68E6; }

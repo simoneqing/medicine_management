@@ -5,8 +5,8 @@
   </view>
 
   <view class="grid-two">
-    <view class="card stat-card"><view class="label">历史总用药次数</view><view class="value"><text class="num">{{stats.total}}</text><text class="unit">次</text></view></view>
-    <view class="card stat-card"><view class="label">本年用药次数</view><view class="value"><text class="num">{{stats.year}}</text><text class="unit">次</text></view></view>
+    <view class="card"><view class="label">历史总用药次数</view><view class="value">{{stats.total}} 次</view></view>
+    <view class="card"><view class="label">本年用药次数</view><view class="value">{{stats.year}} 次</view></view>
   </view>
 
   <view class="card">
@@ -29,15 +29,12 @@
     <block wx:for="{{filteredRecords}}" wx:key="id">
       <view class="item {{item.isNew ? 'new-item' : ''}}">
         <view class="item-head">
-          <text class="item-time">{{item.timeText}}</text>
-          <view class="item-brand-wrap">
-            <text class="item-brand">{{item.brand}}</text>
-            <text wx:if="{{item.isNew}}" class="new-tag">刚刚新增</text>
-          </view>
+          <text>{{item.timeText}}</text>
+          <text>{{item.brand}} <text wx:if="{{item.isNew}}" class="new-tag">刚刚新增</text></text>
         </view>
-        <view class="kv-line"><text class="kv-label">规格组合</text><text class="kv-value">{{item.specText}}</text></view>
-        <view class="kv-line"><text class="kv-label">总剂量</text><text class="kv-value">{{item.totalDose}}</text></view>
-        <view class="kv-line"><text class="kv-label">预计提升浓度</text><text class="kv-value strong">{{item.expectedRise}}</text></view>
+        <view class="muted">规格组合：{{item.specText}}</view>
+        <view class="muted">总剂量：{{item.totalDose}}</view>
+        <view class="muted">预计提升浓度：{{item.expectedRise}}</view>
         <view class="item-actions" wx:if="{{item.canEdit || item.canDelete}}">
           <button
             wx:if="{{item.canEdit}}"
@@ -97,7 +94,7 @@
         </view>
       </block>
 
-      <view class="card compact calc-card">
+      <view class="card compact">
         <view class="muted">总剂量：{{calc.totalDose}}</view>
         <view class="muted">当前体重：{{calc.weight}}</view>
         <view class="muted">回收率：{{calc.recoveryRate}}</view>
