@@ -35,8 +35,18 @@
         <view class="muted">规格组合：{{item.specText}}</view>
         <view class="muted">总剂量：{{item.totalDose}}</view>
         <view class="muted">预计提升浓度：{{item.expectedRise}}</view>
-        <view class="item-actions" wx:if="{{item.canDelete}}">
+        <view class="item-actions" wx:if="{{item.canEdit || item.canDelete}}">
           <button
+            wx:if="{{item.canEdit}}"
+            class="edit-btn"
+            size="mini"
+            data-id="{{item.id}}"
+            bindtap="onEditRecord"
+          >
+            编辑
+          </button>
+          <button
+            wx:if="{{item.canDelete}}"
             class="delete-btn"
             size="mini"
             type="warn"
@@ -54,7 +64,7 @@
 
   <view wx:if="{{showAddForm}}" class="drawer">
     <view class="drawer-panel">
-      <view class="drawer-head"><view class="label">新增用药记录</view><text class="close-text" bindtap="closeAddForm">关闭</text></view>
+      <view class="drawer-head"><view class="label">{{editingRecordId ? '编辑用药记录' : '新增用药记录'}}</view><text class="close-text" bindtap="closeAddForm">关闭</text></view>
       <view class="field">
         <text>用药日期</text>
         <picker mode="date" value="{{formDate}}" bindchange="onFormDate">
@@ -92,7 +102,7 @@
         <view class="muted">计算明细：{{calc.detail}}</view>
       </view>
 
-      <view class="drawer-footer"><button type="primary" loading="{{submitting}}" bindtap="submitRecord">{{submitting ? '提交中...' : '提交记录'}}</button></view>
+      <view class="drawer-footer"><button type="primary" loading="{{submitting}}" bindtap="submitRecord">{{submitting ? '提交中...' : (editingRecordId ? '保存修改' : '提交记录')}}</button></view>
     </view>
   </view>
 

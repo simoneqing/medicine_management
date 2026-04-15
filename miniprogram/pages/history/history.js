@@ -24,6 +24,7 @@ Page({
     showAddForm: false,
     submitting: false,
     deletingId: '',
+    editingRecordId: '',
     formDate: '',
     formClock: '',
     selectedMedicineIndex: 0,
@@ -197,7 +198,8 @@ Page({
           specText,
           totalDose: `${totalDoseVal.toFixed(2)} ${med.unit || 'IU'}`,
           expectedRise: `${rise}%`,
-          canDelete: Boolean(r.id && !`${r.id}`.startsWith('local_'))
+          canDelete: Boolean(r.id && !`${r.id}`.startsWith('local_')),
+          canEdit: Boolean(r.id && !`${r.id}`.startsWith('local_'))
         };
       });
 
@@ -206,9 +208,14 @@ Page({
 
   openAddForm() {
     const now = new Date();
-    this.setData({ showAddForm: true, formDate: toDateValue(now), formClock: toTimeValue(now) });
+    this.setData({
+      showAddForm: true,
+      editingRecordId: '',
+      formDate: toDateValue(now),
+      formClock: toTimeValue(now)
+    });
   },
-  closeAddForm() { this.setData({ showAddForm: false }); },
+  closeAddForm() { this.setData({ showAddForm: false, editingRecordId: '' }); },
   onFormDate(e) { this.setData({ formDate: e.detail.value }); },
   onFormClock(e) { this.setData({ formClock: e.detail.value }); },
 
@@ -275,52 +282,104 @@ Page({
 
     this.setData({ submitting: true });
     try {
-      const res = await wx.cloud.callFunction({
-        name: 'addMedicineRecord',
-        data: {
-          userId: this.data.userId,
-          medicineId: med.id,
-          dose: totalDose,
-          timestamp: timestampMs,
-          counts,
-          createdAt: Date.now(),
-          expectedRise: Number(this.data.calc.expectedRise || 0),
-          weightSnapshot: Number(this.data.profile.weight || 0)
-        }
-      });
-
-      if (!res.result?.success) {
-        throw new Error(res.result?.message || '新增失败');
-      }
-
-      const localId = `local_${Date.now()}`;
-      const localRecord = {
-        id: localId,
+      const payload = {
+        userId: this.data.userId,
         medicineId: med.id,
-        timestamp: timestampMs,
         dose: totalDose,
+        timestamp: timestampMs,
         counts,
         createdAt: Date.now(),
         expectedRise: Number(this.data.calc.expectedRise || 0),
         weightSnapshot: Number(this.data.profile.weight || 0)
       };
-      this.setData({
-        records: [localRecord, ...this.data.records],
-        submitting: false,
-        showAddForm: false,
-        lastAddedId: localId
-      }, () => {
-        wx.setStorageSync(HISTORY_CACHE_KEY, this.data.records);
-        this.refreshStatsAndList();
-        wx.showToast({ title: '新增成功', icon: 'success' });
+      const isEditing = Boolean(this.data.editingRecordId);
+      const res = await wx.cloud.callFunction({
+        name: isEditing ? 'updateMedicineRecord' : 'addMedicineRecord',
+        data: isEditing ? { ...payload, recordId: this.data.editingRecordId } : payload
       });
 
-      // 后台再同步一次云端最终结果（包含真实 _id）
+      if (!res.result?.success) {
+        throw new Error(res.result?.message || (isEditing ? '更新失败' : '新增失败'));
+      }
+
+      if (isEditing) {
+        const nextRecords = this.data.records.map((r) => (r.id === this.data.editingRecordId
+          ? {
+            ...r,
+            medicineId: med.id,
+            timestamp: timestampMs,
+            dose: totalDose,
+            counts,
+            expectedRise: Number(this.data.calc.expectedRise || 0),
+            weightSnapshot: Number(this.data.profile.weight || 0)
+          }
+          : r));
+        this.setData({
+          records: nextRecords,
+          submitting: false,
+          showAddForm: false,
+          editingRecordId: ''
+        }, () => {
+          wx.setStorageSync(HISTORY_CACHE_KEY, this.data.records);
+          this.refreshStatsAndList();
+          wx.showToast({ title: '更新成功', icon: 'success' });
+        });
+      } else {
+        const localId = `local_${Date.now()}`;
+        const localRecord = {
+          id: localId,
+          medicineId: med.id,
+          timestamp: timestampMs,
+          dose: totalDose,
+          counts,
+          createdAt: Date.now(),
+          expectedRise: Number(this.data.calc.expectedRise || 0),
+          weightSnapshot: Number(this.data.profile.weight || 0)
+        };
+        this.setData({
+          records: [localRecord, ...this.data.records],
+          submitting: false,
+          showAddForm: false,
+          editingRecordId: '',
+          lastAddedId: localId
+        }, () => {
+          wx.setStorageSync(HISTORY_CACHE_KEY, this.data.records);
+          this.refreshStatsAndList();
+          wx.showToast({ title: '新增成功', icon: 'success' });
+        });
+      }
+
       this.loadRecordsFromCloud().then(() => this.refreshStatsAndList());
     } catch (e) {
       this.setData({ submitting: false });
-      wx.showToast({ title: e.message || '新增失败', icon: 'none' });
+      wx.showToast({ title: e.message || (this.data.editingRecordId ? '更新失败' : '新增失败'), icon: 'none' });
     }
+  },
+
+  onEditRecord(e) {
+    const recordId = e.currentTarget.dataset.id;
+    const target = this.data.records.find((r) => r.id === recordId);
+    if (!target) return;
+
+    const medIndex = this.data.medicines.findIndex((m) => m.id === target.medicineId);
+    const selectedMedicineIndex = medIndex >= 0 ? medIndex : 0;
+    const med = this.data.medicines[selectedMedicineIndex];
+    const editDate = new Date(Number(target.timestamp || Date.now()));
+    const counts = target.counts && typeof target.counts === 'object' ? target.counts : {};
+    const specInputs = (med?.specs || []).map((s) => ({
+      spec: s,
+      unit: med.unit,
+      count: Number(counts[s] || 0)
+    }));
+
+    this.setData({
+      showAddForm: true,
+      editingRecordId: recordId,
+      selectedMedicineIndex,
+      formDate: toDateValue(editDate),
+      formClock: toTimeValue(editDate),
+      specInputs
+    }, () => this.recalcForm());
   },
 
   async onDeleteRecord(e) {
