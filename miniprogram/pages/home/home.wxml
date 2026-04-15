@@ -1,7 +1,7 @@
 <view class="container">
   <view class="header">
     <view class="header-title">用药管理 · 首页</view>
-    <view class="header-subtitle">单病种模型：所有品牌记录统一累计浓度</view>
+    <view class="header-subtitle">所有品牌记录统一累计浓度</view>
   </view>
 
   <view class="grid-two">
@@ -19,21 +19,21 @@
   </view>
 
   <view class="card">
-    <view class="card-title">当前血药浓度（统一累计）</view>
+    <view class="card-title">当前因子浓度（统一累计）</view>
     <view class="conc">{{currentConcentration}} %</view>
-    <view class="muted">纵轴：血药浓度（%） | 横轴：时间</view>
+    <view class="muted">纵轴：因子浓度（%） | 横轴：时间</view>
   </view>
 
   <view class="card">
     <view class="card-head">
-      <view class="card-title">血药浓度曲线</view>
+      <view class="card-title">因子浓度曲线</view>
       <view class="tabs">
         <view class="tab {{chartMode==='day' ? 'active' : ''}}" bindtap="switchToDay">当天</view>
         <view class="tab {{chartMode==='week' ? 'active' : ''}}" bindtap="switchToWeek">一周</view>
       </view>
     </view>
     <canvas type="2d" id="chartCanvas" canvas-id="chartCanvas" class="chart"></canvas>
-    <view class="muted">纵轴固定：0%~120%，曲线表示血药浓度随时间变化</view>
+    <view class="muted">纵轴固定：0%~120%，曲线表示因子浓度随时间变化</view>
   </view>
 
   <view class="actions">

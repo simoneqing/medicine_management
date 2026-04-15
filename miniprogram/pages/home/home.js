@@ -20,7 +20,7 @@ Page({
     monthlyStats: { count: 0, totalDoseIU: 0 },
     currentConcentration: '0.0',
     chartMode: 'day',
-    chartData: { labels: [], points: [] },
+    chartData: { labels: [], points: [], pointTimes: [], renderPoints: [] },
     lastRecord: null
   },
 
@@ -152,6 +152,8 @@ Page({
     const now = new Date();
     const labels = [];
     const points = [];
+    const pointTimes = [];
+    const renderPoints = [];
 
     if (mode === 'day') {
       const dayStart = new Date(now);
@@ -159,17 +161,30 @@ Page({
       for (let i = 0; i < 24; i += 1) {
         const d = new Date(dayStart.getTime() + i * 3600000);
         labels.push(`${d.getHours()}时`);
-        points.push(this.computeConcentrationAt(d.getTime()));
+        const t = d.getTime();
+        pointTimes.push(t);
+        points.push(this.computeConcentrationAt(t));
+      }
+      for (let i = 0; i <= 96; i += 1) {
+        const t = dayStart.getTime() + i * 15 * 60000;
+        renderPoints.push({ t, v: this.computeConcentrationAt(t) });
       }
     } else {
       for (let i = -2; i <= 4; i += 1) {
         const d = new Date(now.getTime() + i * 24 * 3600000);
         labels.push(`${d.getMonth() + 1}/${d.getDate()}`);
-        points.push(this.computeConcentrationAt(d.getTime()));
+        const t = d.getTime();
+        pointTimes.push(t);
+        points.push(this.computeConcentrationAt(t));
+      }
+      const start = now.getTime() - 2 * 24 * 3600000;
+      for (let i = 0; i <= 28; i += 1) {
+        const t = start + i * 6 * 3600000;
+        renderPoints.push({ t, v: this.computeConcentrationAt(t) });
       }
     }
 
-    this.setData({ chartMode: mode, chartData: { labels, points } });
+    this.setData({ chartMode: mode, chartData: { labels, points, pointTimes, renderPoints } });
   },
 
   drawChart(retry = 0) {
@@ -198,6 +213,10 @@ Page({
       const pad = { left: 34, right: 8, top: 16, bottom: 24 };
       const labels = this.data.chartData.labels;
       const points = this.data.chartData.points;
+      const pointTimes = this.data.chartData.pointTimes || [];
+      const renderPoints = (this.data.chartData.renderPoints || []).length
+        ? this.data.chartData.renderPoints
+        : points.map((v, i) => ({ t: pointTimes[i] || i, v }));
 
       ctx.clearRect(0, 0, width, height);
       ctx.strokeStyle = '#e5e7eb';
@@ -213,20 +232,18 @@ Page({
         ctx.fillText(`${tick}%`, 2, y + 3);
       }
 
+      const minT = renderPoints.length ? Number(renderPoints[0].t) : 0;
+      const maxT = renderPoints.length ? Number(renderPoints[renderPoints.length - 1].t) : 1;
+      const toXByTime = (t) => pad.left + ((width - pad.left - pad.right) * (Number(t) - minT)) / Math.max(maxT - minT, 1);
       const toX = (i) => pad.left + ((width - pad.left - pad.right) * i) / Math.max(labels.length - 1, 1);
       const toY = (v) => pad.top + ((120 - v) / 120) * (height - pad.top - pad.bottom);
 
       ctx.beginPath();
-      points.forEach((p, i) => {
-        const x = toX(i);
-        const y = toY(p);
+      renderPoints.forEach((p, i) => {
+        const x = toXByTime(p.t);
+        const y = toY(p.v);
         if (i === 0) ctx.moveTo(x, y);
-        else {
-          const prevX = toX(i - 1);
-          const prevY = toY(points[i - 1]);
-          const cx = (prevX + x) / 2;
-          ctx.quadraticCurveTo(cx, prevY, x, y);
-        }
+        else ctx.lineTo(x, y);
       });
       ctx.strokeStyle = '#2563eb';
       ctx.lineWidth = 2;
@@ -234,17 +251,27 @@ Page({
 
       ctx.fillStyle = '#6b7280';
       ctx.font = '10px sans-serif';
-      const step = this.data.chartMode === 'day' ? 4 : 1;
+      const step = this.data.chartMode === 'day' ? 6 : 1;
       labels.forEach((label, i) => {
         if (i % step === 0 || i === labels.length - 1) {
-          ctx.fillText(label, toX(i) - 10, height - 8);
+          ctx.fillText(label, toX(i) - 12, height - 6);
         }
       });
 
+      if (this.data.chartMode === 'week') {
+        ctx.fillStyle = '#2563eb';
+        ctx.font = '10px sans-serif';
+        points.forEach((p, i) => {
+          const x = toX(i);
+          const y = toY(p);
+          const text = `${Number(p).toFixed(1)}%`;
+          ctx.fillText(text, x - 16, Math.max(12, y - 8));
+        });
+      }
+
       ctx.fillStyle = '#334155';
       ctx.font = '11px sans-serif';
-      ctx.fillText('血药浓度（%）', 4, 10);
-      ctx.fillText('时间', width - 24, height - 8);
+      ctx.fillText('因子浓度（%）', 4, 10);
     });
   },
 
