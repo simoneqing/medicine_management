@@ -1,0 +1,32 @@
+<view class="container">
+  <view class="card">
+    <view class="title">个人信息</view>
+    <view class="current-row">
+      <text class="label">用户ID（尾号）</text>
+      <text class="value">{{maskedUserId}}</text>
+    </view>
+    <view class="current-row">
+      <text class="label">当前体重</text>
+      <view class="value"><text class="num">{{profile.weight}}</text><text class="unit-mini">kg</text></view>
+    </view>
+    <view class="muted">体重会影响预计提升浓度与相关计算，请保持更新。</view>
+  </view>
+
+  <view class="card">
+    <view class="title">体重管理</view>
+    <view class="input-wrap">
+      <input
+        class="weight-input"
+        type="digit"
+        placeholder="请输入体重，例如 68.5"
+        value="{{weightInput}}"
+        bindinput="onWeightInput"
+      />
+      <text class="unit">kg</text>
+    </view>
+    <button class="save-btn" type="primary" loading="{{saving}}" disabled="{{saving || !canSave}}" bindtap="saveWeight">
+      {{saving ? '保存中...' : '保存体重'}}
+    </button>
+    <view class="status {{statusType === 'error' ? 'error' : ''}}">{{statusText}}</view>
+  </view>
+</view>
