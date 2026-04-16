@@ -245,7 +245,7 @@ Page({
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
-      ctx.strokeStyle = '#4DA3FF';
+      ctx.strokeStyle = '#2B7DE0';
       ctx.lineWidth = 2;
       ctx.stroke();
 
@@ -259,7 +259,7 @@ Page({
       });
 
       if (this.data.chartMode === 'week') {
-        ctx.fillStyle = '#2F86E8';
+        ctx.fillStyle = '#2B7DE0';
         ctx.font = '10px sans-serif';
         points.forEach((p, i) => {
           const x = toX(i);

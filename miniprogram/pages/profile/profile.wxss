@@ -36,7 +36,7 @@
 .value {
   font-size: 40rpx;
   font-weight: 800;
-  color: #2F86E8;
+  color: #2B7DE0;
 }
 
 .muted {
@@ -67,17 +67,17 @@
 .save-btn {
   border-radius: 16rpx;
   font-size: 30rpx;
-  background: #4DA3FF !important;
+  background: #2B7DE0 !important;
 }
 
 .save-btn:active {
-  background: #2F86E8 !important;
+  background: #1F6FCC !important;
 }
 
 .status {
   margin-top: 16rpx;
   font-size: 24rpx;
-  color: #2F86E8;
+  color: #2B7DE0;
   background: #EAF4FF;
   border-radius: 12rpx;
   padding: 12rpx 14rpx;

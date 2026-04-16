@@ -5,9 +5,9 @@ page {
 }
 
 button[type='primary'] {
-  background: #4DA3FF;
+  background: #2B7DE0;
 }
 
 button[type='primary']:active {
-  background: #2F86E8;
+  background: #1F6FCC;
 }
