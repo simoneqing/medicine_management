@@ -13,9 +13,31 @@ input { border: 1px solid #e5e7eb; border-radius: 10rpx; padding: 10rpx 12rpx; f
 .status { margin-top: 10rpx; background: #EAF4FF; color: #2B7DE0; padding: 10rpx; border-radius: 10rpx; font-size: 24rpx; }
 .btn-ghost { background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1; }
 .item { border: 1px solid #e5e7eb; border-radius: 14rpx; padding: 14rpx; margin-bottom: 10rpx; }
+.item-clickable:active { opacity: 0.85; background: #f8fbff; }
 .item-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8rpx; }
 .brand { font-size: 32rpx; font-weight: 700; }
+.hint { font-size: 22rpx; color: #64748b; }
 .spec-main { font-size: 30rpx; font-weight: 700; color: #1f2a37; margin-bottom: 8rpx; }
 .kv { display: flex; justify-content: space-between; font-size: 24rpx; margin-top: 6rpx; }
 button[type='primary'] { background:#2B7DE0; border-radius: 12rpx; }
 button[type='primary']:active { background:#1F6FCC; }
+
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx;
+  z-index: 99;
+}
+
+.modal-card {
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+}

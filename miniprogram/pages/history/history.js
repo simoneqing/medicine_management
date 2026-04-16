@@ -403,7 +403,13 @@ Page({
       }
 
       const next = this.data.records.filter((r) => r.id !== recordId);
-      this.setData({ records: next, deletingId: '' }, () => {
+      const shouldCloseEditor = this.data.editingRecordId === recordId;
+      this.setData({
+        records: next,
+        deletingId: '',
+        showAddForm: shouldCloseEditor ? false : this.data.showAddForm,
+        editingRecordId: shouldCloseEditor ? '' : this.data.editingRecordId
+      }, () => {
         wx.setStorageSync(HISTORY_CACHE_KEY, next);
         this.refreshStatsAndList();
       });

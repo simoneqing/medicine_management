@@ -1,9 +1,9 @@
 Page({
   data: {
     medicines: [],
+    showEditModal: false,
     editingId: '',
-    statusText: '可新增或点击列表“编辑”后更新。',
-    editStateText: '当前状态：新增药品',
+    statusText: '可新增药品，点击列表项可进入编辑。',
     form: {
       brand: '',
       halfLife: '',
@@ -54,6 +54,8 @@ Page({
     this.setData({ 'form.specs': [...this.data.form.specs, 0] });
   },
 
+  noop() {},
+
   removeSpec(e) {
     const idx = Number(e.currentTarget.dataset.index);
     this.setData({ 'form.specs': this.data.form.specs.filter((_, i) => i !== idx) });
@@ -65,6 +67,7 @@ Page({
     if (!med) return;
 
     this.setData({
+      showEditModal: true,
       editingId: id,
       form: {
         brand: med.brand,
@@ -73,16 +76,30 @@ Page({
         unit: med.unit || 'IU',
         specs: [...med.specs]
       },
-      statusText: `已载入 ${med.brand}，可编辑共享参数和规格列表。`,
-      editStateText: `当前正在编辑：${med.brand}`
+      statusText: `已载入 ${med.brand}，可编辑共享参数和规格列表。`
+    });
+  },
+
+  closeEditModal() {
+    this.setData({
+      showEditModal: false,
+      editingId: '',
+      statusText: '可新增药品，点击列表项可进入编辑。',
+      form: {
+        brand: '',
+        halfLife: '',
+        recoveryRate: '',
+        unit: 'IU',
+        specs: [150, 300, 600]
+      }
     });
   },
 
   resetForm() {
     this.setData({
       editingId: '',
-      statusText: '可新增或点击列表“编辑”后更新。',
-      editStateText: '当前状态：新增药品',
+      showEditModal: false,
+      statusText: '可新增药品，点击列表项可进入编辑。',
       form: {
         brand: '',
         halfLife: '',
