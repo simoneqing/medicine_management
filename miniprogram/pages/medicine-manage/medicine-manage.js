@@ -17,6 +17,16 @@ Page({
     await this.loadMedicines();
   },
 
+  getDefaultForm() {
+    return {
+      brand: '',
+      halfLife: '',
+      recoveryRate: '',
+      unit: 'IU',
+      specs: [150, 300, 600]
+    };
+  },
+
   formatMedicines(list) {
     return list.map((m) => ({
       ...m,
@@ -56,6 +66,15 @@ Page({
 
   noop() {},
 
+  openAddForm() {
+    this.setData({
+      showEditModal: true,
+      editingId: '',
+      statusText: '新增药品信息后可直接保存。',
+      form: this.getDefaultForm()
+    });
+  },
+
   removeSpec(e) {
     const idx = Number(e.currentTarget.dataset.index);
     this.setData({ 'form.specs': this.data.form.specs.filter((_, i) => i !== idx) });
@@ -85,13 +104,7 @@ Page({
       showEditModal: false,
       editingId: '',
       statusText: '可新增药品，点击列表项可进入编辑。',
-      form: {
-        brand: '',
-        halfLife: '',
-        recoveryRate: '',
-        unit: 'IU',
-        specs: [150, 300, 600]
-      }
+      form: this.getDefaultForm()
     });
   },
 
@@ -100,13 +113,7 @@ Page({
       editingId: '',
       showEditModal: false,
       statusText: '可新增药品，点击列表项可进入编辑。',
-      form: {
-        brand: '',
-        halfLife: '',
-        recoveryRate: '',
-        unit: 'IU',
-        specs: [150, 300, 600]
-      }
+      form: this.getDefaultForm()
     });
   },
 
