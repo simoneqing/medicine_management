@@ -27,7 +27,7 @@
       <view class="label">历史记录</view>
     </view>
     <block wx:for="{{filteredRecords}}" wx:key="id">
-      <view class="item {{item.isNew ? 'new-item' : ''}}">
+      <view class="item item-tappable {{item.isNew ? 'new-item' : ''}}" data-id="{{item.id}}" bindtap="onEditRecord">
         <view class="item-head">
           <text>{{item.timeText}}</text>
           <text>{{item.brand}} <text wx:if="{{item.isNew}}" class="new-tag">刚刚新增</text></text>
@@ -35,29 +35,6 @@
         <view class="muted">规格组合：{{item.specText}}</view>
         <view class="muted">总剂量：{{item.totalDose}}</view>
         <view class="muted">预计提升浓度：{{item.expectedRise}}</view>
-        <view class="item-actions" wx:if="{{item.canEdit || item.canDelete}}">
-          <button
-            wx:if="{{item.canEdit}}"
-            class="edit-btn"
-            size="mini"
-            data-id="{{item.id}}"
-            bindtap="onEditRecord"
-          >
-            编辑
-          </button>
-          <button
-            wx:if="{{item.canDelete}}"
-            class="delete-btn"
-            size="mini"
-            type="warn"
-            data-id="{{item.id}}"
-            loading="{{deletingId===item.id}}"
-            disabled="{{deletingId===item.id}}"
-            bindtap="onDeleteRecord"
-          >
-            删除
-          </button>
-        </view>
       </view>
     </block>
   </view>
@@ -102,7 +79,19 @@
         <view class="muted">计算明细：{{calc.detail}}</view>
       </view>
 
-      <view class="drawer-footer"><button type="primary" loading="{{submitting}}" bindtap="submitRecord">{{submitting ? '提交中...' : (editingRecordId ? '保存修改' : '提交记录')}}</button></view>
+      <view class="drawer-footer">
+        <button type="primary" loading="{{submitting}}" bindtap="submitRecord">{{submitting ? '提交中...' : (editingRecordId ? '保存修改' : '提交记录')}}</button>
+        <button
+          wx:if="{{editingRecordId}}"
+          class="danger-ghost"
+          data-id="{{editingRecordId}}"
+          loading="{{deletingId===editingRecordId}}"
+          disabled="{{deletingId===editingRecordId}}"
+          bindtap="onDeleteRecord"
+        >
+          删除这条记录
+        </button>
+      </view>
     </view>
   </view>
 

@@ -219,7 +219,7 @@ Page({
         : points.map((v, i) => ({ t: pointTimes[i] || i, v }));
 
       ctx.clearRect(0, 0, width, height);
-      ctx.strokeStyle = '#e5e7eb';
+      ctx.strokeStyle = '#EAF4FF';
       for (let i = 0; i <= 6; i += 1) {
         const y = pad.top + ((height - pad.top - pad.bottom) * i) / 6;
         ctx.beginPath();
@@ -227,7 +227,7 @@ Page({
         ctx.lineTo(width - pad.right, y);
         ctx.stroke();
         const tick = 120 - i * 20;
-        ctx.fillStyle = '#64748b';
+        ctx.fillStyle = '#8A8A8A';
         ctx.font = '10px sans-serif';
         ctx.fillText(`${tick}%`, 2, y + 3);
       }
@@ -245,11 +245,11 @@ Page({
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
-      ctx.strokeStyle = '#2563eb';
+      ctx.strokeStyle = '#4DA3FF';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      ctx.fillStyle = '#6b7280';
+      ctx.fillStyle = '#8A8A8A';
       ctx.font = '10px sans-serif';
       const step = this.data.chartMode === 'day' ? 6 : 1;
       labels.forEach((label, i) => {
@@ -259,7 +259,7 @@ Page({
       });
 
       if (this.data.chartMode === 'week') {
-        ctx.fillStyle = '#2563eb';
+        ctx.fillStyle = '#2F86E8';
         ctx.font = '10px sans-serif';
         points.forEach((p, i) => {
           const x = toX(i);
@@ -269,7 +269,7 @@ Page({
         });
       }
 
-      ctx.fillStyle = '#334155';
+      ctx.fillStyle = '#6B7280';
       ctx.font = '11px sans-serif';
       ctx.fillText('因子浓度（%）', 4, 10);
     });
