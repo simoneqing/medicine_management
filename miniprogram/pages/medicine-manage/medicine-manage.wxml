@@ -34,7 +34,7 @@
 
       <view class="list-head">
         <text>规格列表（数值）</text>
-        <button size="mini" bindtap="addSpec">+ 规格</button>
+        <button size="mini" class="btn-mini-outline btn-mini-blue" bindtap="addSpec">+ 规格</button>
       </view>
       <block wx:for="{{form.specs}}" wx:key="index">
         <view class="spec-row">
@@ -42,7 +42,7 @@
             <input type="number" value="{{item}}" data-index="{{index}}" bindinput="onSpecInput"/>
             <text class="unit-tag">{{form.unit || 'IU'}}</text>
           </view>
-          <button size="mini" data-index="{{index}}" bindtap="removeSpec">删除</button>
+          <button size="mini" class="btn-mini-outline btn-mini-gray" data-index="{{index}}" bindtap="removeSpec">删除</button>
         </view>
       </block>
 

@@ -6,9 +6,28 @@
 .field text { display: block; font-size: 24rpx; margin-bottom: 6rpx; color: #374151; }
 input { border: 1px solid #e5e7eb; border-radius: 10rpx; padding: 10rpx 12rpx; font-size: 26rpx; background: #fff; }
 .list-head { display: flex; justify-content: space-between; align-items: center; margin: 8rpx 0; }
-.spec-row { display: grid; grid-template-columns: 1fr auto; gap: 10rpx; margin-bottom: 10rpx; }
+.list-head button { margin-right: 0; }
+.spec-row { display: grid; grid-template-columns: 1fr auto; gap: 10rpx; margin-bottom: 10rpx; align-items: center; }
+.spec-row button { justify-self: end; margin-right: 0; }
 .spec-input-wrap { display: flex; align-items: center; gap: 8rpx; }
 .unit-tag { font-size: 24rpx; color: #64748b; }
+.btn-mini-outline {
+  font-size: 20rpx !important;
+  font-weight: 400 !important;
+  line-height: 1.5;
+  padding: 0 14rpx;
+  border-radius: 10rpx;
+  background: #fff;
+}
+.btn-mini-outline::after {
+  border-width: 1rpx !important;
+  border-style: solid !important;
+  border-radius: 10rpx !important;
+}
+.btn-mini-blue { color: #2B7DE0; }
+.btn-mini-blue::after { border-color: #2B7DE0; }
+.btn-mini-gray { color: #6b7280; }
+.btn-mini-gray::after { border-color: #cbd5e1; }
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10rpx; margin-top: 10rpx; }
 .status { margin-top: 10rpx; background: #EAF4FF; color: #2B7DE0; padding: 10rpx; border-radius: 10rpx; font-size: 24rpx; }
 .btn-ghost { background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1; }

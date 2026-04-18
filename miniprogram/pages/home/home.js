@@ -210,7 +210,7 @@ Page({
 
       const width = res[0].width;
       const height = res[0].height;
-      const pad = { left: 34, right: 8, top: 16, bottom: 24 };
+      const pad = { left: 54, right: 18, top: 20, bottom: 34 };
       const labels = this.data.chartData.labels;
       const points = this.data.chartData.points;
       const pointTimes = this.data.chartData.pointTimes || [];
@@ -219,17 +219,20 @@ Page({
         : points.map((v, i) => ({ t: pointTimes[i] || i, v }));
 
       ctx.clearRect(0, 0, width, height);
-      ctx.strokeStyle = '#EAF4FF';
+      ctx.textBaseline = 'middle';
+      ctx.strokeStyle = '#E2ECFB';
+      ctx.lineWidth = 1;
       for (let i = 0; i <= 6; i += 1) {
-        const y = pad.top + ((height - pad.top - pad.bottom) * i) / 6;
+        const y = Math.round(pad.top + ((height - pad.top - pad.bottom) * i) / 6) + 0.5;
         ctx.beginPath();
         ctx.moveTo(pad.left, y);
         ctx.lineTo(width - pad.right, y);
         ctx.stroke();
         const tick = 120 - i * 20;
         ctx.fillStyle = '#8A8A8A';
-        ctx.font = '10px sans-serif';
-        ctx.fillText(`${tick}%`, 2, y + 3);
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${tick}%`, pad.left - 8, y);
       }
 
       const minT = renderPoints.length ? Number(renderPoints[0].t) : 0;
@@ -240,38 +243,45 @@ Page({
 
       ctx.beginPath();
       renderPoints.forEach((p, i) => {
-        const x = toXByTime(p.t);
-        const y = toY(p.v);
+        const x = Math.round(toXByTime(p.t)) + 0.5;
+        const y = Math.round(toY(p.v)) + 0.5;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
       ctx.strokeStyle = '#2B7DE0';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
       ctx.stroke();
 
       ctx.fillStyle = '#8A8A8A';
-      ctx.font = '10px sans-serif';
+      ctx.font = '12px sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'center';
       const step = this.data.chartMode === 'day' ? 6 : 1;
       labels.forEach((label, i) => {
         if (i % step === 0 || i === labels.length - 1) {
-          ctx.fillText(label, toX(i) - 12, height - 6);
+          ctx.fillText(label, toX(i), height - pad.bottom + 10);
         }
       });
 
       if (this.data.chartMode === 'week') {
         ctx.fillStyle = '#2B7DE0';
-        ctx.font = '10px sans-serif';
+        ctx.font = '11px sans-serif';
+        ctx.textBaseline = 'bottom';
         points.forEach((p, i) => {
           const x = toX(i);
           const y = toY(p);
           const text = `${Number(p).toFixed(1)}%`;
-          ctx.fillText(text, x - 16, Math.max(12, y - 8));
+          ctx.fillText(text, x, Math.max(pad.top + 2, y - 6));
         });
       }
 
       ctx.fillStyle = '#6B7280';
-      ctx.font = '11px sans-serif';
-      ctx.fillText('因子浓度（%）', 4, 10);
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('因子浓度（%）', 6, 4);
     });
   },
 

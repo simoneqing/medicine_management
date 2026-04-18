@@ -99,6 +99,8 @@ Page({
   },
 
   async loadRecordsFromCloud() {
+    const requestId = Date.now();
+    this._latestRecordsRequestId = requestId;
     const res = await wx.cloud.callFunction({
       name: 'getWeeklyStats',
       data: { userId: this.data.userId, days: 36500, withRecords: true }
@@ -129,6 +131,7 @@ Page({
     if (!records.length && this.data.records.length) {
       return;
     }
+    if (this._latestRecordsRequestId !== requestId) return;
 
     this.setData({ records, recordsCalcBaseWeight: Number(this.data.profile.weight || 68) });
     wx.setStorageSync(HISTORY_CACHE_KEY, records);
@@ -325,9 +328,9 @@ Page({
           wx.showToast({ title: '更新成功', icon: 'success' });
         });
       } else {
-        const localId = `local_${Date.now()}`;
+        const recordId = res.result?.recordId || `local_${Date.now()}`;
         const localRecord = {
-          id: localId,
+          id: recordId,
           medicineId: med.id,
           timestamp: timestampMs,
           dose: totalDose,
@@ -341,7 +344,7 @@ Page({
           submitting: false,
           showAddForm: false,
           editingRecordId: '',
-          lastAddedId: localId
+          lastAddedId: recordId
         }, () => {
           wx.setStorageSync(HISTORY_CACHE_KEY, this.data.records);
           this.refreshStatsAndList();

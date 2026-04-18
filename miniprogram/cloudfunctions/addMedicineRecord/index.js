@@ -13,7 +13,7 @@ exports.main = async (event) => {
   const createdAt = Number(event.createdAt || Date.now());
   const expectedRise = Number(event.expectedRise);
   const weightSnapshot = Number(event.weightSnapshot);
-  await db.collection('medRecords').add({
+  const addRes = await db.collection('medRecords').add({
     data: {
       userId,
       medicineId,
@@ -26,5 +26,5 @@ exports.main = async (event) => {
     }
   });
 
-  return { success: true };
+  return { success: true, recordId: addRes._id };
 };
