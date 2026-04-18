@@ -1,0 +1,58 @@
+<view class="container">
+  <view class="card intro">
+    <view class="title">药品维护</view>
+    <view class="muted">点击底部“+”新增；点击列表卡片编辑。参数与逻辑保持不变。</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">药品列表（点击卡片编辑）</view>
+    <block wx:for="{{medicines}}" wx:key="id">
+      <view class="item item-clickable" data-id="{{item.id}}" bindtap="editMedicine">
+        <view class="item-head">
+          <text class="brand">{{item.brand}}</text>
+          <text class="hint">点击编辑</text>
+        </view>
+        <view class="spec-main">{{item.specText}}</view>
+        <view class="kv"><text>半衰期</text><text>{{item.halfLife}} h</text></view>
+        <view class="kv"><text>回收率系数（浓度换算）</text><text>{{item.recoveryRate}}</text></view>
+        <view class="kv"><text>规格单位</text><text>{{item.unit}}</text></view>
+      </view>
+    </block>
+  </view>
+
+  <view wx:if="{{showEditModal}}" class="modal-mask" bindtap="closeEditModal">
+    <view class="modal-card drawer-panel" catchtap="noop">
+      <view class="drawer-head">
+        <view class="section-title">{{editingId ? '编辑药品' : '新增药品'}}</view>
+        <text class="close-text" bindtap="closeEditModal">关闭</text>
+      </view>
+      <view class="field"><text>品牌名称</text><input value="{{form.brand}}" data-key="brand" bindinput="onInput"/></view>
+      <view class="field"><text>半衰期（小时）</text><input type="number" value="{{form.halfLife}}" data-key="halfLife" bindinput="onInput"/></view>
+      <view class="field"><text>回收率系数（浓度换算）</text><input type="number" value="{{form.recoveryRate}}" data-key="recoveryRate" bindinput="onInput"/></view>
+      <view class="muted">预计提升浓度 =（总剂量 / 体重）× 回收率系数</view>
+      <view class="field"><text>规格单位</text><input value="{{form.unit}}" data-key="unit" bindinput="onInput"/></view>
+
+      <view class="list-head">
+        <text>规格列表（数值）</text>
+        <button size="mini" class="btn-mini-outline btn-mini-blue" bindtap="addSpec">+ 规格</button>
+      </view>
+      <block wx:for="{{form.specs}}" wx:key="index">
+        <view class="spec-row">
+          <view class="spec-input-wrap">
+            <input type="number" value="{{item}}" data-index="{{index}}" bindinput="onSpecInput"/>
+            <text class="unit-tag">{{form.unit || 'IU'}}</text>
+          </view>
+          <button size="mini" class="btn-mini-outline btn-mini-gray" data-index="{{index}}" bindtap="removeSpec">删除</button>
+        </view>
+      </block>
+
+      <view class="actions">
+        <button type="primary" bindtap="saveMedicine">{{editingId ? '保存修改' : '保存新增'}}</button>
+        <button class="btn-ghost" bindtap="closeEditModal">取消</button>
+      </view>
+      <view class="status">{{statusText}}</view>
+    </view>
+  </view>
+
+  <button wx:if="{{!showEditModal}}" class="fab" bindtap="openAddForm">＋</button>
+</view>
