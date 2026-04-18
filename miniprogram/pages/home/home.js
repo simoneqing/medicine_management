@@ -277,11 +277,6 @@ Page({
         });
       }
 
-      ctx.fillStyle = '#6B7280';
-      ctx.font = '12px sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-      ctx.fillText('因子浓度（%）', 6, 4);
     });
   },
 

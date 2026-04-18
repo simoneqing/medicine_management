@@ -19,7 +19,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title">当前因子浓度（统一累计）</view>
+    <view class="card-title">当前因子浓度</view>
     <view class="conc">{{currentConcentration}} %</view>
     <view class="muted">纵轴：因子浓度（%） | 横轴：时间</view>
   </view>

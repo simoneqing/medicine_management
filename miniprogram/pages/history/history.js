@@ -99,7 +99,8 @@ Page({
   },
 
   async loadRecordsFromCloud() {
-    const requestId = Date.now();
+    this._recordsRequestSeq = (this._recordsRequestSeq || 0) + 1;
+    const requestId = this._recordsRequestSeq;
     this._latestRecordsRequestId = requestId;
     const res = await wx.cloud.callFunction({
       name: 'getWeeklyStats',
@@ -352,7 +353,9 @@ Page({
         });
       }
 
-      this.loadRecordsFromCloud().then(() => this.refreshStatsAndList());
+      setTimeout(() => {
+        this.loadRecordsFromCloud().then(() => this.refreshStatsAndList());
+      }, 1200);
     } catch (e) {
       this.setData({ submitting: false });
       wx.showToast({ title: e.message || (this.data.editingRecordId ? '更新失败' : '新增失败'), icon: 'none' });
