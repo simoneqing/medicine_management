@@ -15,15 +15,25 @@ exports.main = async (event) => {
   if (!existing.data) return { success: false, message: '记录不存在' };
   if (existing.data.userId !== userId) return { success: false, message: '无权限修改该记录' };
 
-  await db.collection('medRecords').doc(recordId).update({
+  const nextCounts = counts && typeof counts === 'object'
+    ? Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, Number(v || 0)]))
+    : {};
+
+  const payload = {
+    ...existing.data,
+    medicineId,
+    dose: Number(dose),
+    timestamp: Number(timestamp),
+    counts: nextCounts,
+    expectedRise: Number.isFinite(Number(expectedRise)) ? Number(Number(expectedRise).toFixed(2)) : null,
+    weightSnapshot: Number.isFinite(Number(weightSnapshot)) ? Number(Number(weightSnapshot).toFixed(1)) : null,
+    updatedAt: Date.now()
+  };
+  delete payload._id;
+
+  await db.collection('medRecords').doc(recordId).set({
     data: {
-      medicineId,
-      dose: Number(dose),
-      timestamp: Number(timestamp),
-      counts: counts && typeof counts === 'object' ? counts : {},
-      expectedRise: Number.isFinite(Number(expectedRise)) ? Number(Number(expectedRise).toFixed(2)) : null,
-      weightSnapshot: Number.isFinite(Number(weightSnapshot)) ? Number(Number(weightSnapshot).toFixed(1)) : null,
-      updatedAt: Date.now()
+      ...payload
     }
   });
 

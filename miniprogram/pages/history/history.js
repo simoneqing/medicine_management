@@ -192,7 +192,10 @@ Page({
           ? calcExpectedRise(totalDoseVal, this.data.profile.weight, Number(med.recoveryRate || 0))
           : staticRise);
         const specText = fromCounts > 0
-          ? Object.entries(r.counts).map(([s, c]) => `${s}${med.unit || ''}×${c}`).join(' + ')
+          ? Object.entries(r.counts)
+            .filter(([, c]) => Number(c || 0) > 0)
+            .map(([s, c]) => `${s}${med.unit || ''}×${c}`)
+            .join(' + ')
           : `总剂量记录 ${totalDoseVal.toFixed(2)} ${med.unit || 'IU'}`;
         return {
           ...r,
