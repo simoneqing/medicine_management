@@ -1,0 +1,13 @@
+page {
+  background: #F7FAFC;
+  color: #1f2a37;
+  font-size: 28rpx;
+}
+
+button[type='primary'] {
+  background: #2B7DE0;
+}
+
+button[type='primary']:active {
+  background: #1F6FCC;
+}
