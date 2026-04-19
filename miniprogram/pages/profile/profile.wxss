@@ -1,0 +1,89 @@
+.container {
+  min-height: 100vh;
+  background: #F7FAFC;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  border: 1rpx solid #e5e7eb;
+  box-shadow: 0 4rpx 10rpx rgba(15, 23, 42, 0.04);
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 16rpx;
+}
+
+.current-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.label {
+  font-size: 28rpx;
+  color: #6b7280;
+}
+
+.value {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #2B7DE0;
+}
+
+.muted {
+  font-size: 24rpx;
+  color: #6b7280;
+}
+
+.input-wrap {
+  border: 1rpx solid #e5e7eb;
+  border-radius: 16rpx;
+  padding: 0 16rpx;
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.weight-input {
+  flex: 1;
+  height: 84rpx;
+  font-size: 30rpx;
+}
+
+.unit {
+  font-size: 28rpx;
+  color: #6b7280;
+}
+
+.save-btn {
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  background: #2B7DE0 !important;
+}
+
+.save-btn:active {
+  background: #1F6FCC !important;
+}
+
+.status {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #2B7DE0;
+  background: #EAF4FF;
+  border-radius: 12rpx;
+  padding: 12rpx 14rpx;
+}
+
+.status.error {
+  color: #b91c1c;
+  background: #fee2e2;
+}
