@@ -25,6 +25,7 @@ Page({
     submitting: false,
     deletingId: '',
     editingRecordId: '',
+    editingWeightSnapshot: null,
     formDate: '',
     formClock: '',
     selectedMedicineIndex: 0,
@@ -218,11 +219,12 @@ Page({
     this.setData({
       showAddForm: true,
       editingRecordId: '',
+      editingWeightSnapshot: null,
       formDate: toDateValue(now),
       formClock: toTimeValue(now)
     });
   },
-  closeAddForm() { this.setData({ showAddForm: false, editingRecordId: '' }); },
+  closeAddForm() { this.setData({ showAddForm: false, editingRecordId: '', editingWeightSnapshot: null }); },
   onFormDate(e) { this.setData({ formDate: e.detail.value }); },
   onFormClock(e) { this.setData({ formClock: e.detail.value }); },
 
@@ -253,17 +255,20 @@ Page({
   recalcForm() {
     const med = this.data.medicines[this.data.selectedMedicineIndex];
     if (!med) return;
+    const activeWeight = this.data.editingRecordId
+      ? Number(this.data.editingWeightSnapshot || this.data.profile.weight)
+      : Number(this.data.profile.weight);
     const counts = {};
     this.data.specInputs.forEach((i) => { counts[i.spec] = i.count; });
     const totalDose = calcDoseByCounts(counts);
-    const rise = Math.round(calcExpectedRise(totalDose, this.data.profile.weight, med.recoveryRate));
+    const rise = Math.round(calcExpectedRise(totalDose, activeWeight, med.recoveryRate));
     this.setData({
       calc: {
         totalDose: `${totalDose.toFixed(2)} ${med.unit}`,
-        weight: `${this.data.profile.weight} kg`,
+        weight: `${activeWeight} kg`,
         recoveryRate: `${med.recoveryRate}`,
         expectedRise: String(rise),
-        detail: `(${totalDose.toFixed(2)} / ${this.data.profile.weight}) × ${med.recoveryRate} ≈ ${rise}%`
+        detail: `(${totalDose.toFixed(2)} / ${activeWeight}) × ${med.recoveryRate} ≈ ${rise}%`
       }
     });
   },
@@ -289,6 +294,9 @@ Page({
 
     this.setData({ submitting: true });
     try {
+      const activeWeightSnapshot = this.data.editingRecordId
+        ? Number(this.data.editingWeightSnapshot || this.data.profile.weight)
+        : Number(this.data.profile.weight);
       const payload = {
         userId: this.data.userId,
         medicineId: med.id,
@@ -297,7 +305,7 @@ Page({
         counts,
         createdAt: Date.now(),
         expectedRise: Number(this.data.calc.expectedRise || 0),
-        weightSnapshot: Number(this.data.profile.weight || 0)
+        weightSnapshot: Number(activeWeightSnapshot || 0)
       };
       const isEditing = Boolean(this.data.editingRecordId);
       const res = await wx.cloud.callFunction({
@@ -318,14 +326,15 @@ Page({
             dose: totalDose,
             counts,
             expectedRise: Number(this.data.calc.expectedRise || 0),
-            weightSnapshot: Number(this.data.profile.weight || 0)
+            weightSnapshot: Number(activeWeightSnapshot || 0)
           }
           : r));
         this.setData({
           records: nextRecords,
           submitting: false,
           showAddForm: false,
-          editingRecordId: ''
+          editingRecordId: '',
+          editingWeightSnapshot: null
         }, () => {
           wx.setStorageSync(HISTORY_CACHE_KEY, this.data.records);
           this.refreshStatsAndList();
@@ -348,6 +357,7 @@ Page({
           submitting: false,
           showAddForm: false,
           editingRecordId: '',
+          editingWeightSnapshot: null,
           lastAddedId: recordId
         }, () => {
           wx.setStorageSync(HISTORY_CACHE_KEY, this.data.records);
@@ -356,9 +366,7 @@ Page({
         });
       }
 
-      setTimeout(() => {
-        this.loadRecordsFromCloud().then(() => this.refreshStatsAndList());
-      }, 1200);
+      this.refreshStatsAndList();
     } catch (e) {
       this.setData({ submitting: false });
       wx.showToast({ title: e.message || (this.data.editingRecordId ? '更新失败' : '新增失败'), icon: 'none' });
@@ -384,6 +392,7 @@ Page({
     this.setData({
       showAddForm: true,
       editingRecordId: recordId,
+      editingWeightSnapshot: Number(target.weightSnapshot || this.data.profile.weight || 0),
       selectedMedicineIndex,
       formDate: toDateValue(editDate),
       formClock: toTimeValue(editDate),
@@ -417,7 +426,8 @@ Page({
         records: next,
         deletingId: '',
         showAddForm: shouldCloseEditor ? false : this.data.showAddForm,
-        editingRecordId: shouldCloseEditor ? '' : this.data.editingRecordId
+        editingRecordId: shouldCloseEditor ? '' : this.data.editingRecordId,
+        editingWeightSnapshot: shouldCloseEditor ? null : this.data.editingWeightSnapshot
       }, () => {
         wx.setStorageSync(HISTORY_CACHE_KEY, next);
         this.refreshStatsAndList();
