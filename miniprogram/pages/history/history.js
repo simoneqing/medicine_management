@@ -437,5 +437,14 @@ Page({
       this.setData({ deletingId: '' });
       wx.showToast({ title: err.message || '删除失败', icon: 'none' });
     }
+  },
+
+  switchTab(e) {
+    const key = e.currentTarget.dataset.key;
+    if (key === 'history') return;
+    if (key === 'home') return wx.reLaunch({ url: '/pages/home/home' });
+    if (key === 'add') return this.openAddForm();
+    if (key === 'medicine') return wx.reLaunch({ url: '/pages/medicine-manage/medicine-manage' });
+    if (key === 'profile') return wx.reLaunch({ url: '/pages/profile/profile' });
   }
 });

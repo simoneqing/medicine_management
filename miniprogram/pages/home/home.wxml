@@ -51,24 +51,24 @@
   </view>
 
   <view class="tabbar">
-    <view class="tab-item active" bindtap="noop">
+    <view class="tab-item active" data-key="home" bindtap="switchTab">
       <text class="tab-icon">⌂</text>
       <text class="tab-text">首页</text>
     </view>
-    <view class="tab-item" bindtap="handleViewHistory">
-      <text class="tab-icon">≡</text>
+    <view class="tab-item" data-key="history" bindtap="switchTab">
+      <text class="tab-icon">☰</text>
       <text class="tab-text">历史记录</text>
     </view>
-    <view class="tab-add-wrap">
-      <button class="tab-add" bindtap="handleAddRecord">＋</button>
+    <view class="tab-item" data-key="add" bindtap="switchTab">
+      <view class="tab-icon tab-add-icon">＋</view>
       <text class="tab-text">新增</text>
     </view>
-    <view class="tab-item" bindtap="handleViewMedicine">
+    <view class="tab-item" data-key="medicine" bindtap="switchTab">
       <text class="tab-icon">⚙</text>
       <text class="tab-text">药品维护</text>
     </view>
-    <view class="tab-item" bindtap="handleViewProfile">
-      <text class="tab-icon">◉</text>
+    <view class="tab-item" data-key="profile" bindtap="switchTab">
+      <text class="tab-icon">◯</text>
       <text class="tab-text">我的</text>
     </view>
   </view>

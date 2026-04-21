@@ -301,9 +301,12 @@ Page({
     });
   },
 
-  handleAddRecord() { wx.navigateTo({ url: '/pages/history/history?openAdd=1' }); },
-  noop() {},
-  handleViewHistory() { wx.navigateTo({ url: '/pages/history/history' }); },
-  handleViewMedicine() { wx.navigateTo({ url: '/pages/medicine-manage/medicine-manage' }); },
-  handleViewProfile() { wx.navigateTo({ url: '/pages/profile/profile' }); }
+  switchTab(e) {
+    const key = e.currentTarget.dataset.key;
+    if (key === 'home') return;
+    if (key === 'history') return wx.reLaunch({ url: '/pages/history/history' });
+    if (key === 'add') return wx.reLaunch({ url: '/pages/history/history?openAdd=1' });
+    if (key === 'medicine') return wx.reLaunch({ url: '/pages/medicine-manage/medicine-manage' });
+    if (key === 'profile') return wx.reLaunch({ url: '/pages/profile/profile' });
+  }
 });

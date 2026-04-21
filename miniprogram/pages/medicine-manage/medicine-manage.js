@@ -153,5 +153,14 @@ Page({
     } catch (e) {
       this.setData({ statusText: `保存失败：${e.message || '请稍后重试'}` });
     }
+  },
+
+  switchTab(e) {
+    const key = e.currentTarget.dataset.key;
+    if (key === 'medicine') return;
+    if (key === 'home') return wx.reLaunch({ url: '/pages/home/home' });
+    if (key === 'history') return wx.reLaunch({ url: '/pages/history/history' });
+    if (key === 'add') return wx.reLaunch({ url: '/pages/history/history?openAdd=1' });
+    if (key === 'profile') return wx.reLaunch({ url: '/pages/profile/profile' });
   }
 });

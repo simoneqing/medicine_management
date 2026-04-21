@@ -125,5 +125,14 @@ Page({
       this.setData({ saving: false });
       this.setStatus(`保存失败：${e.message || '请稍后重试'}`, 'error');
     }
+  },
+
+  switchTab(e) {
+    const key = e.currentTarget.dataset.key;
+    if (key === 'profile') return;
+    if (key === 'home') return wx.reLaunch({ url: '/pages/home/home' });
+    if (key === 'history') return wx.reLaunch({ url: '/pages/history/history' });
+    if (key === 'add') return wx.reLaunch({ url: '/pages/history/history?openAdd=1' });
+    if (key === 'medicine') return wx.reLaunch({ url: '/pages/medicine-manage/medicine-manage' });
   }
 });
