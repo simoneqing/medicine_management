@@ -158,9 +158,9 @@ Page({
   switchTab(e) {
     const key = e.currentTarget.dataset.key;
     if (key === 'medicine') return;
-    if (key === 'home') return wx.reLaunch({ url: '/pages/home/home' });
-    if (key === 'history') return wx.reLaunch({ url: '/pages/history/history' });
-    if (key === 'add') return wx.reLaunch({ url: '/pages/history/history?openAdd=1' });
-    if (key === 'profile') return wx.reLaunch({ url: '/pages/profile/profile' });
+    if (key === 'home') return wx.redirectTo({ url: '/pages/home/home' });
+    if (key === 'history') return wx.redirectTo({ url: '/pages/history/history' });
+    if (key === 'add') return wx.redirectTo({ url: '/pages/history/history?openAdd=1' });
+    if (key === 'profile') return wx.redirectTo({ url: '/pages/profile/profile' });
   }
 });

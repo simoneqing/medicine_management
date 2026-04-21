@@ -4,6 +4,7 @@ const DEFAULT_USER_ID = 'u_demo_001';
 
 function pad(n) { return `${n}`.padStart(2, '0'); }
 function formatDateTime(date) { return `${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}`; }
+function formatWeekday(date) { return ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][date.getDay()]; }
 function toDateValue(date) { return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`; }
 function toTimeValue(date) { return `${pad(date.getHours())}:${pad(date.getMinutes())}`; }
 function calcDoseByCounts(counts) { return Object.entries(counts || {}).reduce((s, [k, v]) => s + Number(k) * Number(v || 0), 0); }
@@ -201,7 +202,7 @@ Page({
         return {
           ...r,
           isNew: r.id === this.data.lastAddedId,
-          timeText: formatDateTime(new Date(Number(r.timestamp))),
+          timeText: `${formatDateTime(new Date(Number(r.timestamp)))} ${formatWeekday(new Date(Number(r.timestamp)))}`,
           brand: med.brand || '未知药品',
           specText,
           totalDose: `${totalDoseVal.toFixed(2)} ${med.unit || 'IU'}`,
@@ -442,9 +443,9 @@ Page({
   switchTab(e) {
     const key = e.currentTarget.dataset.key;
     if (key === 'history') return;
-    if (key === 'home') return wx.reLaunch({ url: '/pages/home/home' });
+    if (key === 'home') return wx.redirectTo({ url: '/pages/home/home' });
     if (key === 'add') return this.openAddForm();
-    if (key === 'medicine') return wx.reLaunch({ url: '/pages/medicine-manage/medicine-manage' });
-    if (key === 'profile') return wx.reLaunch({ url: '/pages/profile/profile' });
+    if (key === 'medicine') return wx.redirectTo({ url: '/pages/medicine-manage/medicine-manage' });
+    if (key === 'profile') return wx.redirectTo({ url: '/pages/profile/profile' });
   }
 });

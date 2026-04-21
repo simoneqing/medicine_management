@@ -304,9 +304,9 @@ Page({
   switchTab(e) {
     const key = e.currentTarget.dataset.key;
     if (key === 'home') return;
-    if (key === 'history') return wx.reLaunch({ url: '/pages/history/history' });
-    if (key === 'add') return wx.reLaunch({ url: '/pages/history/history?openAdd=1' });
-    if (key === 'medicine') return wx.reLaunch({ url: '/pages/medicine-manage/medicine-manage' });
-    if (key === 'profile') return wx.reLaunch({ url: '/pages/profile/profile' });
+    if (key === 'history') return wx.redirectTo({ url: '/pages/history/history' });
+    if (key === 'add') return wx.redirectTo({ url: '/pages/history/history?openAdd=1' });
+    if (key === 'medicine') return wx.redirectTo({ url: '/pages/medicine-manage/medicine-manage' });
+    if (key === 'profile') return wx.redirectTo({ url: '/pages/profile/profile' });
   }
 });

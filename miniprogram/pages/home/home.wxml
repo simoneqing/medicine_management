@@ -1,7 +1,6 @@
 <view class="container">
   <view class="header">
     <view class="header-title">用药管理 · 首页</view>
-    <view class="header-subtitle">所有品牌记录统一累计浓度</view>
   </view>
 
   <view class="grid-two">
@@ -19,7 +18,8 @@
   </view>
 
   <view class="card">
-    <view class="card-title">最近用药</view>
+    <view class="card-title">当前因子浓度</view>
+    <view class="conc">{{currentConcentration}} %</view>
     <block wx:if="{{recentRecords.length}}">
       <block wx:for="{{recentRecords}}" wx:key="id">
         <view class="recent-row">
@@ -32,13 +32,6 @@
   </view>
 
   <view class="card">
-    <view class="conc-row">
-      <view class="conc-label">当前因子浓度</view>
-      <view class="conc">{{currentConcentration}} %</view>
-    </view>
-  </view>
-
-  <view class="card">
     <view class="card-head">
       <view class="card-title">因子浓度曲线</view>
       <view class="tabs">
@@ -47,7 +40,6 @@
       </view>
     </view>
     <canvas type="2d" id="chartCanvas" canvas-id="chartCanvas" class="chart"></canvas>
-    <view class="muted">纵轴固定：0%~120%，曲线表示因子浓度随时间变化</view>
   </view>
 
   <view class="tabbar">

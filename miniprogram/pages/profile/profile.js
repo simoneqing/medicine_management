@@ -130,9 +130,9 @@ Page({
   switchTab(e) {
     const key = e.currentTarget.dataset.key;
     if (key === 'profile') return;
-    if (key === 'home') return wx.reLaunch({ url: '/pages/home/home' });
-    if (key === 'history') return wx.reLaunch({ url: '/pages/history/history' });
-    if (key === 'add') return wx.reLaunch({ url: '/pages/history/history?openAdd=1' });
-    if (key === 'medicine') return wx.reLaunch({ url: '/pages/medicine-manage/medicine-manage' });
+    if (key === 'home') return wx.redirectTo({ url: '/pages/home/home' });
+    if (key === 'history') return wx.redirectTo({ url: '/pages/history/history' });
+    if (key === 'add') return wx.redirectTo({ url: '/pages/history/history?openAdd=1' });
+    if (key === 'medicine') return wx.redirectTo({ url: '/pages/medicine-manage/medicine-manage' });
   }
 });
