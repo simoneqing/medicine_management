@@ -19,9 +19,23 @@
   </view>
 
   <view class="card">
-    <view class="card-title">当前因子浓度</view>
-    <view class="conc">{{currentConcentration}} %</view>
-    <view class="muted">纵轴：因子浓度（%） | 横轴：时间</view>
+    <view class="card-title">最近用药</view>
+    <block wx:if="{{recentRecords.length}}">
+      <block wx:for="{{recentRecords}}" wx:key="id">
+        <view class="recent-row">
+          <view class="recent-left">{{item.specText}}，{{item.brand}}</view>
+          <view class="recent-right">{{item.timeText}}，{{item.weekday}}，{{item.dateText}}</view>
+        </view>
+      </block>
+    </block>
+    <view wx:else class="muted">暂无最近用药记录</view>
+  </view>
+
+  <view class="card">
+    <view class="conc-row">
+      <view class="conc-label">当前因子浓度</view>
+      <view class="conc">{{currentConcentration}} %</view>
+    </view>
   </view>
 
   <view class="card">
@@ -36,10 +50,26 @@
     <view class="muted">纵轴固定：0%~120%，曲线表示因子浓度随时间变化</view>
   </view>
 
-  <view class="actions">
-    <button class="action primary" bindtap="handleAddRecord">新增用药记录</button>
-    <button class="action" bindtap="handleViewHistory">查看历史记录</button>
-    <button class="action" bindtap="handleViewMedicine">药品维护</button>
-    <button class="action" bindtap="handleViewProfile">个人信息</button>
+  <view class="tabbar">
+    <view class="tab-item active" bindtap="noop">
+      <text class="tab-icon">⌂</text>
+      <text class="tab-text">首页</text>
+    </view>
+    <view class="tab-item" bindtap="handleViewHistory">
+      <text class="tab-icon">≡</text>
+      <text class="tab-text">历史记录</text>
+    </view>
+    <view class="tab-add-wrap">
+      <button class="tab-add" bindtap="handleAddRecord">＋</button>
+      <text class="tab-text">新增</text>
+    </view>
+    <view class="tab-item" bindtap="handleViewMedicine">
+      <text class="tab-icon">⚙</text>
+      <text class="tab-text">药品维护</text>
+    </view>
+    <view class="tab-item" bindtap="handleViewProfile">
+      <text class="tab-icon">◉</text>
+      <text class="tab-text">我的</text>
+    </view>
   </view>
 </view>

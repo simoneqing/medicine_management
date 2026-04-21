@@ -19,6 +19,7 @@ Page({
     weeklyStats: { count: 0, totalDoseIU: 0 },
     monthlyStats: { count: 0, totalDoseIU: 0 },
     currentConcentration: '0.0',
+    recentRecords: [],
     chartMode: 'day',
     chartData: { labels: [], points: [], pointTimes: [], renderPoints: [] },
     lastRecord: null
@@ -87,6 +88,7 @@ Page({
     const medicineMap = {};
     (medicinesRes.data || []).forEach((m) => {
       medicineMap[m._id] = {
+        name: m.brand || m.name || '未知药品',
         halfLife: Number(m.halfLife || 24),
         xValue: Number(m.xValue ?? m.recoveryRate ?? 2),
         recoveryRate: Number(m.recoveryRate ?? m.xValue ?? 2)
@@ -116,6 +118,25 @@ Page({
       count: monthRows.length,
       totalDoseIU: Number(monthRows.reduce((sum, r) => sum + Number(r.dose || 0), 0).toFixed(2))
     };
+    const weekdayMap = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    updates.recentRecords = [...records]
+      .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
+      .slice(0, 2)
+      .map((r) => {
+        const med = medicineMap[r.medicineId] || {};
+        const dt = new Date(Number(r.timestamp));
+        const specText = r.counts && typeof r.counts === 'object' && Object.keys(r.counts).length
+          ? Object.entries(r.counts).filter(([, c]) => Number(c || 0) > 0).map(([s, c]) => `${s}IU×${c}`).join(' + ')
+          : `${Number(r.dose || 0).toFixed(0)}IU`;
+        return {
+          id: r._id || `${r.timestamp}-${r.medicineId}`,
+          specText,
+          brand: med.name || '未知药品',
+          timeText: `${`${dt.getHours()}`.padStart(2, '0')}:${`${dt.getMinutes()}`.padStart(2, '0')}`,
+          weekday: weekdayMap[dt.getDay()],
+          dateText: `${`${dt.getMonth() + 1}`.padStart(2, '0')}-${`${dt.getDate()}`.padStart(2, '0')}`
+        };
+      });
 
     if (last.success && last.data) {
       updates.lastRecord = last.data;
@@ -281,6 +302,7 @@ Page({
   },
 
   handleAddRecord() { wx.navigateTo({ url: '/pages/history/history?openAdd=1' }); },
+  noop() {},
   handleViewHistory() { wx.navigateTo({ url: '/pages/history/history' }); },
   handleViewMedicine() { wx.navigateTo({ url: '/pages/medicine-manage/medicine-manage' }); },
   handleViewProfile() { wx.navigateTo({ url: '/pages/profile/profile' }); }
