@@ -1,0 +1,47 @@
+.container { padding: 20rpx; padding-bottom: 170rpx; background: #F7FAFC; min-height: 100vh; box-sizing: border-box; }
+.header { background: #4DA3FF; border-radius: 18rpx; padding: 20rpx; color:#FFFFFF; margin-bottom: 14rpx; border: 1rpx solid #7BBEFF; }
+.header-title { font-size: 38rpx; font-weight: 700; line-height: 1.25; }
+.grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12rpx; margin-bottom: 12rpx; }
+.card { background:#fff; border-radius: 16rpx; padding: 16rpx; margin-bottom: 12rpx; border: 1rpx solid #e5e7eb; box-shadow: 0 4rpx 10rpx rgba(15,23,42,0.04); }
+.card-title { font-size: 30rpx; font-weight: 600; margin-bottom: 10rpx; }
+.row { display: flex; justify-content: space-between; margin-bottom: 10rpx; color:#1f2a37; font-size: 26rpx; }
+.row text:first-child { padding-right: 12rpx; }
+.value { font-weight: 600; }
+.conc { font-size: 56rpx; color:#2B7DE0; font-weight: 800; line-height: 1.1; margin-bottom: 12rpx; }
+.muted { color:#8A8A8A; font-size: 24rpx; line-height: 1.5; }
+.recent-row { display: flex; justify-content: space-between; align-items: center; font-size: 22rpx; color: #8A8A8A; margin-bottom: 8rpx; gap: 12rpx; }
+.recent-left, .recent-right { width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-right { text-align: right; }
+.card-head { display:flex; justify-content: space-between; align-items:center; margin-bottom: 8rpx; }
+.tabs { display:flex; border:1px solid #EAF4FF; border-radius:999rpx; overflow:hidden; }
+.tab { padding: 8rpx 18rpx; font-size: 22rpx; color:#6b7280; }
+.tab.active { background:#2B7DE0; color:#fff; }
+.chart { width: 100%; height: 360rpx; border-radius: 12rpx; background: #ffffff; margin-bottom: 0; }
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  border-top: 1rpx solid #e5e7eb;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: end;
+  padding: 10rpx 0 calc(env(safe-area-inset-bottom) + 10rpx);
+  z-index: 100;
+}
+.tab-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6b7280; }
+.tab-item.active { color: #2B7DE0; }
+.tab-icon { font-size: 34rpx; line-height: 1; margin-bottom: 6rpx; width: 44rpx; text-align: center; }
+.tab-text { font-size: 20rpx; }
+.tab-add-icon {
+  width: 44rpx;
+  height: 44rpx;
+  line-height: 40rpx;
+  border-radius: 50%;
+  border: 2rpx solid #2B7DE0;
+  color: #2B7DE0;
+  font-size: 34rpx;
+  margin: 0 0 6rpx;
+  box-sizing: border-box;
+}
