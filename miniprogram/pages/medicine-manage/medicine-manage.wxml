@@ -60,7 +60,7 @@
     <view class="tab-item" data-key="home" bindtap="switchTab"><text class="tab-icon">⌂</text><text class="tab-text">首页</text></view>
     <view class="tab-item" data-key="history" bindtap="switchTab"><text class="tab-icon">☰</text><text class="tab-text">历史记录</text></view>
     <view class="tab-item" data-key="add" bindtap="switchTab"><view class="tab-icon tab-add-icon">＋</view><text class="tab-text">新增</text></view>
-    <view class="tab-item active" data-key="medicine" bindtap="switchTab"><text class="tab-icon">⚙</text><text class="tab-text">药品维护</text></view>
+    <view class="tab-item active" data-key="medicine" bindtap="switchTab"><view class="tab-icon tab-medicine-icon"></view><text class="tab-text">药品维护</text></view>
     <view class="tab-item" data-key="profile" bindtap="switchTab"><text class="tab-icon">◯</text><text class="tab-text">我的</text></view>
   </view>
 </view>
