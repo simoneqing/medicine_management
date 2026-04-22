@@ -1,23 +1,24 @@
 <view class="container">
+  <view class="home-content">
   <view class="header">
     <view class="header-title">用药管理 · 首页</view>
   </view>
 
-  <view class="grid-two">
-    <view class="card">
+  <view class="grid-two stats-grid">
+    <view class="card stats-card">
       <view class="card-title">本周用药统计</view>
       <view class="row"><text>用药次数</text><text class="value">{{weeklyStats.count}} 次</text></view>
       <view class="row"><text>总量</text><text class="value">{{weeklyStats.totalDoseIU}} IU</text></view>
     </view>
 
-    <view class="card">
+    <view class="card stats-card">
       <view class="card-title">本月用药统计</view>
       <view class="row"><text>用药次数</text><text class="value">{{monthlyStats.count}} 次</text></view>
       <view class="row"><text>总量</text><text class="value">{{monthlyStats.totalDoseIU}} IU</text></view>
     </view>
   </view>
 
-  <view class="card">
+  <view class="card concentration-card">
     <view class="card-title">当前因子浓度</view>
     <view class="conc">{{currentConcentration}} %</view>
     <block wx:if="{{recentRecords.length}}">
@@ -31,7 +32,7 @@
     <view wx:else class="muted">暂无最近用药记录</view>
   </view>
 
-  <view class="card">
+  <view class="card chart-card">
     <view class="card-head">
       <view class="card-title">因子浓度曲线</view>
       <view class="tabs">
@@ -40,6 +41,7 @@
       </view>
     </view>
     <canvas type="2d" id="chartCanvas" canvas-id="chartCanvas" class="chart"></canvas>
+  </view>
   </view>
 
   <view class="tabbar">
@@ -56,7 +58,7 @@
       <text class="tab-text">新增</text>
     </view>
     <view class="tab-item" data-key="medicine" bindtap="switchTab">
-      <text class="tab-icon">⚙</text>
+      <view class="tab-icon tab-medicine-icon"></view>
       <text class="tab-text">药品维护</text>
     </view>
     <view class="tab-item" data-key="profile" bindtap="switchTab">
