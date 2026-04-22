@@ -24,6 +24,10 @@ function catmullRomInterpolate(p0, p1, p2, p3, t) {
     + (-p0 + 3 * p1 - 3 * p2 + p3) * t3
   );
 }
+function getDailyDecayFactor(halfLifeHours) {
+  const safeHalfLife = Math.max(Number(halfLifeHours) || 24, 0.1);
+  return Math.pow(0.5, 24 / safeHalfLife);
+}
 
 Page({
   data: {
@@ -208,6 +212,7 @@ Page({
     } else {
       const todayStart = getDayStartTimestamp(now.getTime());
       const records = this.data.records || [];
+      const medicineMap = this.data.medicineMap || {};
       const recordDaySet = new Set(
         records
           .map((r) => normalizeTimestamp(r.timestamp || r.createdAt))
@@ -215,6 +220,24 @@ Page({
           .map((ts) => getDayStartTimestamp(ts))
       );
       const halfHour = 30 * 60000;
+      const dayHasRecord = [];
+
+      const estimateHalfLifeForDay = (dayStartMs) => {
+        let weightedHalfLife = 0;
+        let weightTotal = 0;
+        records.forEach((r) => {
+          const ts = normalizeTimestamp(r.timestamp || r.createdAt);
+          if (!ts || ts > dayStartMs) return;
+          const med = medicineMap[r.medicineId] || {};
+          const halfLife = Math.max(Number(med.halfLife || 24), 0.1);
+          const dose = Math.max(Number(r.dose || 0), 0);
+          if (dose <= 0) return;
+          weightedHalfLife += halfLife * dose;
+          weightTotal += dose;
+        });
+        return weightTotal > 0 ? (weightedHalfLife / weightTotal) : 24;
+      };
+
       for (let i = -2; i <= 4; i += 1) {
         const dayStartMs = todayStart + i * 24 * 3600000;
         const dayEndMs = dayStartMs + 24 * 3600000;
@@ -223,6 +246,7 @@ Page({
         pointTimes.push(dayEndMs - 1);
 
         const hasRecord = recordDaySet.has(dayStartMs);
+        dayHasRecord.push(hasRecord);
         if (hasRecord) {
           let dayPeak = 0;
           for (let t = dayStartMs; t < dayEndMs; t += halfHour) {
@@ -230,8 +254,11 @@ Page({
           }
           dayPeak = Math.max(dayPeak, this.computeConcentrationAt(dayEndMs - 1));
           points.push(Number(dayPeak.toFixed(1)));
+        } else if (points.length > 0) {
+          const decayFactor = getDailyDecayFactor(estimateHalfLifeForDay(dayStartMs));
+          points.push(Number(clamp(points[points.length - 1] * decayFactor, 0, 120).toFixed(1)));
         } else {
-          points.push(this.computeConcentrationAt(dayEndMs - 1));
+          points.push(Number(this.computeConcentrationAt(dayEndMs - 1).toFixed(1)));
         }
       }
 
@@ -244,11 +271,28 @@ Page({
           const p3 = points[Math.min(points.length - 1, i + 2)];
           const t1 = pointTimes[i];
           const t2 = pointTimes[i + 1];
+          const steepRise = dayHasRecord[i + 1] && p2 > p1;
+
           for (let s = 0; s < segmentCount; s += 1) {
             const ratio = s / segmentCount;
             const t = t1 + (t2 - t1) * ratio;
-            const smoothValue = clamp(catmullRomInterpolate(p0, p1, p2, p3, ratio), 0, 120);
-            renderPoints.push({ t, v: Number(smoothValue.toFixed(2)) });
+            let smoothValue = p1;
+
+            if (steepRise) {
+              if (ratio < 0.82) {
+                smoothValue = p1;
+              } else {
+                const rapid = (ratio - 0.82) / 0.18;
+                smoothValue = p1 + (p2 - p1) * Math.pow(rapid, 1.25);
+              }
+            } else if (p2 <= p1) {
+              const eased = 1 - Math.pow(1 - ratio, 1.65);
+              smoothValue = p1 + (p2 - p1) * eased;
+            } else {
+              smoothValue = catmullRomInterpolate(p0, p1, p2, p3, ratio);
+            }
+
+            renderPoints.push({ t, v: Number(clamp(smoothValue, 0, 120).toFixed(2)) });
           }
         }
         renderPoints.push({
@@ -291,7 +335,7 @@ Page({
 
       const width = res[0].width;
       const height = res[0].height;
-      const pad = { left: 58, right: 18, top: 22, bottom: 38 };
+      const pad = { left: 58, right: 18, top: 24, bottom: 42 };
       const labels = this.data.chartData.labels;
       const points = this.data.chartData.points;
       const pointTimes = this.data.chartData.pointTimes || [];
