@@ -9,31 +9,31 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 16rpx;
+  gap: 10rpx;
 }
 .header { background: #4DA3FF; border-radius: 20rpx; padding: 24rpx 24rpx; color:#FFFFFF; border: 1rpx solid #7BBEFF; }
 .header-title { font-size: 38rpx; font-weight: 700; line-height: 1.3; }
 .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; }
-.stats-grid { margin-top: 2rpx; }
+.stats-grid { margin-top: 0; }
 .card { background:#fff; border-radius: 18rpx; padding: 20rpx; border: 1rpx solid #e5e7eb; box-shadow: 0 4rpx 10rpx rgba(15,23,42,0.04); }
 .stats-card { padding: 22rpx 20rpx; }
 .card-title { font-size: 30rpx; font-weight: 600; margin-bottom: 14rpx; }
-.row { display: flex; justify-content: space-between; margin-bottom: 12rpx; color:#1f2a37; font-size: 26rpx; line-height: 1.45; }
+.row { display: flex; justify-content: space-between; margin-bottom: 14rpx; color:#1f2a37; font-size: 26rpx; line-height: 1.52; }
 .row text:first-child { padding-right: 12rpx; }
 .row:last-child { margin-bottom: 0; }
 .value { font-weight: 600; }
-.concentration-card { margin-top: 2rpx; padding-top: 22rpx; padding-bottom: 22rpx; }
-.conc { font-size: 58rpx; color:#2B7DE0; font-weight: 800; line-height: 1.12; margin-bottom: 14rpx; }
+.concentration-card { margin-top: 0; padding-top: 24rpx; padding-bottom: 22rpx; }
+.conc { font-size: 58rpx; color:#2B7DE0; font-weight: 800; line-height: 1.12; margin-bottom: 16rpx; }
 .muted { color:#8A8A8A; font-size: 24rpx; line-height: 1.5; }
-.recent-row { display: flex; justify-content: space-between; align-items: center; font-size: 22rpx; color: #8A8A8A; margin-bottom: 8rpx; gap: 12rpx; line-height: 1.6; }
+.recent-row { display: flex; justify-content: space-between; align-items: center; font-size: 24rpx; color: #6B7280; margin-bottom: 10rpx; gap: 12rpx; line-height: 1.75; }
 .recent-left, .recent-right { width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .recent-right { text-align: right; }
-.chart-card { margin-top: 2rpx; padding-top: 24rpx; padding-bottom: 20rpx; }
-.card-head { display:flex; justify-content: space-between; align-items:center; margin-bottom: 16rpx; }
+.chart-card { margin-top: 0; padding-top: 22rpx; padding-bottom: 16rpx; }
+.card-head { display:flex; justify-content: space-between; align-items:center; margin-bottom: 14rpx; }
 .tabs { display:flex; border:1px solid #EAF4FF; border-radius:999rpx; overflow:hidden; }
 .tab { padding: 9rpx 20rpx; font-size: 22rpx; color:#6b7280; }
 .tab.active { background:#2B7DE0; color:#fff; }
-.chart { width: 100%; height: 430rpx; border-radius: 12rpx; background: #ffffff; margin: 6rpx 0 8rpx; }
+.chart { width: 100%; height: 422rpx; border-radius: 12rpx; background: #ffffff; margin: 4rpx 0 6rpx; }
 .tabbar {
   position: fixed;
   left: 0;
