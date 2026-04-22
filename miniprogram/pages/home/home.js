@@ -9,6 +9,25 @@ function normalizeTimestamp(value) {
   if (!Number.isFinite(ts) || ts <= 0) return 0;
   return ts < 1e12 ? ts * 1000 : ts;
 }
+function getDayStartTimestamp(ts) {
+  const d = new Date(ts);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+function catmullRomInterpolate(p0, p1, p2, p3, t) {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return 0.5 * (
+    (2 * p1)
+    + (-p0 + p2) * t
+    + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2
+    + (-p0 + 3 * p1 - 3 * p2 + p3) * t3
+  );
+}
+function getDailyDecayFactor(halfLifeHours) {
+  const safeHalfLife = Math.max(Number(halfLifeHours) || 24, 0.1);
+  return Math.pow(0.5, 24 / safeHalfLife);
+}
 
 Page({
   data: {
@@ -191,17 +210,98 @@ Page({
         renderPoints.push({ t, v: this.computeConcentrationAt(t) });
       }
     } else {
+      const todayStart = getDayStartTimestamp(now.getTime());
+      const records = this.data.records || [];
+      const medicineMap = this.data.medicineMap || {};
+      const recordDaySet = new Set(
+        records
+          .map((r) => normalizeTimestamp(r.timestamp || r.createdAt))
+          .filter((ts) => ts > 0)
+          .map((ts) => getDayStartTimestamp(ts))
+      );
+      const halfHour = 30 * 60000;
+      const dayHasRecord = [];
+
+      const estimateHalfLifeForDay = (dayStartMs) => {
+        let weightedHalfLife = 0;
+        let weightTotal = 0;
+        records.forEach((r) => {
+          const ts = normalizeTimestamp(r.timestamp || r.createdAt);
+          if (!ts || ts > dayStartMs) return;
+          const med = medicineMap[r.medicineId] || {};
+          const halfLife = Math.max(Number(med.halfLife || 24), 0.1);
+          const dose = Math.max(Number(r.dose || 0), 0);
+          if (dose <= 0) return;
+          weightedHalfLife += halfLife * dose;
+          weightTotal += dose;
+        });
+        return weightTotal > 0 ? (weightedHalfLife / weightTotal) : 24;
+      };
+
       for (let i = -2; i <= 4; i += 1) {
-        const d = new Date(now.getTime() + i * 24 * 3600000);
+        const dayStartMs = todayStart + i * 24 * 3600000;
+        const dayEndMs = dayStartMs + 24 * 3600000;
+        const d = new Date(dayStartMs);
         labels.push(`${d.getMonth() + 1}/${d.getDate()}`);
-        const t = d.getTime();
-        pointTimes.push(t);
-        points.push(this.computeConcentrationAt(t));
+        pointTimes.push(dayEndMs - 1);
+
+        const hasRecord = recordDaySet.has(dayStartMs);
+        dayHasRecord.push(hasRecord);
+        if (hasRecord) {
+          let dayPeak = 0;
+          for (let t = dayStartMs; t < dayEndMs; t += halfHour) {
+            dayPeak = Math.max(dayPeak, this.computeConcentrationAt(t));
+          }
+          dayPeak = Math.max(dayPeak, this.computeConcentrationAt(dayEndMs - 1));
+          points.push(Number(dayPeak.toFixed(1)));
+        } else if (points.length > 0) {
+          const decayFactor = getDailyDecayFactor(estimateHalfLifeForDay(dayStartMs));
+          points.push(Number(clamp(points[points.length - 1] * decayFactor, 0, 120).toFixed(1)));
+        } else {
+          points.push(Number(this.computeConcentrationAt(dayEndMs - 1).toFixed(1)));
+        }
       }
-      const start = now.getTime() - 2 * 24 * 3600000;
-      for (let i = 0; i <= 28; i += 1) {
-        const t = start + i * 6 * 3600000;
-        renderPoints.push({ t, v: this.computeConcentrationAt(t) });
+
+      if (points.length >= 2) {
+        const segmentCount = 12;
+        for (let i = 0; i < points.length - 1; i += 1) {
+          const p0 = points[Math.max(0, i - 1)];
+          const p1 = points[i];
+          const p2 = points[i + 1];
+          const p3 = points[Math.min(points.length - 1, i + 2)];
+          const t1 = pointTimes[i];
+          const t2 = pointTimes[i + 1];
+          const steepRise = dayHasRecord[i + 1] && p2 > p1;
+
+          for (let s = 0; s < segmentCount; s += 1) {
+            const ratio = s / segmentCount;
+            const t = t1 + (t2 - t1) * ratio;
+            let smoothValue = p1;
+
+            if (steepRise) {
+              if (ratio < 0.82) {
+                smoothValue = p1;
+              } else {
+                const rapid = (ratio - 0.82) / 0.18;
+                smoothValue = p1 + (p2 - p1) * Math.pow(rapid, 1.25);
+              }
+            } else if (p2 <= p1) {
+              const eased = 1 - Math.pow(1 - ratio, 1.65);
+              smoothValue = p1 + (p2 - p1) * eased;
+            } else {
+              smoothValue = catmullRomInterpolate(p0, p1, p2, p3, ratio);
+            }
+
+            renderPoints.push({ t, v: Number(clamp(smoothValue, 0, 120).toFixed(2)) });
+          }
+        }
+        renderPoints.push({
+          t: pointTimes[pointTimes.length - 1],
+          v: Number(points[points.length - 1].toFixed(2))
+        });
+      } else if (points.length === 1) {
+        renderPoints.push({ t: pointTimes[0], v: points[0] });
+        renderPoints.push({ t: pointTimes[0] + 3600000, v: points[0] });
       }
     }
 
@@ -227,11 +327,15 @@ Page({
       }
       canvas.width = res[0].width * dpr;
       canvas.height = res[0].height * dpr;
-      ctx.scale(dpr, dpr);
+      if (typeof ctx.setTransform === 'function') {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      } else {
+        ctx.scale(dpr, dpr);
+      }
 
       const width = res[0].width;
       const height = res[0].height;
-      const pad = { left: 54, right: 18, top: 20, bottom: 34 };
+      const pad = { left: 58, right: 18, top: 24, bottom: 42 };
       const labels = this.data.chartData.labels;
       const points = this.data.chartData.points;
       const pointTimes = this.data.chartData.pointTimes || [];
@@ -241,17 +345,17 @@ Page({
 
       ctx.clearRect(0, 0, width, height);
       ctx.textBaseline = 'middle';
-      ctx.strokeStyle = '#E2ECFB';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#D7E4F7';
+      ctx.lineWidth = 1.2;
       for (let i = 0; i <= 6; i += 1) {
-        const y = Math.round(pad.top + ((height - pad.top - pad.bottom) * i) / 6) + 0.5;
+        const y = pad.top + ((height - pad.top - pad.bottom) * i) / 6;
         ctx.beginPath();
         ctx.moveTo(pad.left, y);
         ctx.lineTo(width - pad.right, y);
         ctx.stroke();
         const tick = 120 - i * 20;
-        ctx.fillStyle = '#8A8A8A';
-        ctx.font = '12px sans-serif';
+        ctx.fillStyle = '#5F6B7A';
+        ctx.font = '14px sans-serif';
         ctx.textAlign = 'right';
         ctx.fillText(`${tick}%`, pad.left - 8, y);
       }
@@ -264,19 +368,19 @@ Page({
 
       ctx.beginPath();
       renderPoints.forEach((p, i) => {
-        const x = Math.round(toXByTime(p.t)) + 0.5;
-        const y = Math.round(toY(p.v)) + 0.5;
+        const x = toXByTime(p.t);
+        const y = toY(p.v);
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
       ctx.strokeStyle = '#2B7DE0';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 3;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      ctx.fillStyle = '#8A8A8A';
-      ctx.font = '12px sans-serif';
+      ctx.fillStyle = '#5F6B7A';
+      ctx.font = '14px sans-serif';
       ctx.textBaseline = 'top';
       ctx.textAlign = 'center';
       const step = this.data.chartMode === 'day' ? 6 : 1;
@@ -288,7 +392,7 @@ Page({
 
       if (this.data.chartMode === 'week') {
         ctx.fillStyle = '#2B7DE0';
-        ctx.font = '11px sans-serif';
+        ctx.font = '13px sans-serif';
         ctx.textBaseline = 'bottom';
         points.forEach((p, i) => {
           const x = toX(i);

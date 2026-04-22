@@ -117,3 +117,31 @@
   margin: 0 0 6rpx;
   box-sizing: border-box;
 }
+.tab-medicine-icon {
+  position: relative;
+  width: 36rpx;
+  height: 28rpx;
+  border: 2rpx solid currentColor;
+  border-radius: 7rpx;
+  box-sizing: border-box;
+  margin-top: 3rpx;
+  margin-bottom: 7rpx;
+}
+.tab-medicine-icon::before,
+.tab-medicine-icon::after {
+  content: '';
+  position: absolute;
+  background: currentColor;
+}
+.tab-medicine-icon::before {
+  width: 14rpx;
+  height: 2rpx;
+  left: 9rpx;
+  top: 8rpx;
+}
+.tab-medicine-icon::after {
+  width: 2rpx;
+  height: 8rpx;
+  left: 15rpx;
+  top: 5rpx;
+}
