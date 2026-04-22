@@ -30,7 +30,9 @@
           </view>
         </block>
       </block>
-      <view wx:else class="muted">暂无最近用药记录</view>
+      <block wx:else>
+        <view class="muted">暂无最近用药记录</view>
+      </block>
     </view>
 
     <view class="card chart-card">
@@ -43,7 +45,6 @@
       </view>
       <canvas type="2d" id="chartCanvas" canvas-id="chartCanvas" class="chart"></canvas>
     </view>
-  </view>
   </view>
 
   <view class="tabbar">
