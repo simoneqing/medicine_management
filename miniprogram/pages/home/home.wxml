@@ -44,6 +44,7 @@
       <canvas type="2d" id="chartCanvas" canvas-id="chartCanvas" class="chart"></canvas>
     </view>
   </view>
+  </view>
 
   <view class="tabbar">
     <view class="tab-item active" data-key="home" bindtap="switchTab">
