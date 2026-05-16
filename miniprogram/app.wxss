@@ -11,3 +11,177 @@ button[type='primary'] {
 button[type='primary']:active {
   background: #1F6FCC;
 }
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  border-top: 1rpx solid #e5e7eb;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  padding: 8rpx 0 calc(env(safe-area-inset-bottom) + 8rpx);
+  z-index: 100;
+}
+
+.tab-item {
+  height: 96rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  color: #6b7280;
+}
+
+.tab-item.active {
+  color: #2B7DE0;
+}
+
+.tab-icon {
+  width: 44rpx;
+  height: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44rpx;
+  position: relative;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.tab-icon::before,
+.tab-icon::after {
+  box-sizing: border-box;
+}
+
+.tab-text {
+  height: 24rpx;
+  font-size: 20rpx;
+  line-height: 24rpx;
+  white-space: nowrap;
+}
+
+.tab-icon-home::before {
+  content: '';
+  position: absolute;
+  width: 27rpx;
+  height: 22rpx;
+  left: 8rpx;
+  top: 18rpx;
+  border: 3rpx solid currentColor;
+  border-top: 0;
+  border-radius: 4rpx 4rpx 8rpx 8rpx;
+}
+
+.tab-icon-home::after {
+  content: '';
+  position: absolute;
+  width: 25rpx;
+  height: 25rpx;
+  left: 9rpx;
+  top: 6rpx;
+  border-left: 3rpx solid currentColor;
+  border-top: 3rpx solid currentColor;
+  border-radius: 4rpx 0 0;
+  transform: rotate(45deg);
+}
+
+.tab-icon-history::before {
+  content: '';
+  position: absolute;
+  width: 30rpx;
+  height: 34rpx;
+  left: 7rpx;
+  top: 5rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 8rpx;
+}
+
+.tab-icon-history::after {
+  content: '';
+  position: absolute;
+  width: 18rpx;
+  height: 2rpx;
+  left: 13rpx;
+  top: 13rpx;
+  background: currentColor;
+  border-radius: 999rpx;
+  box-shadow: 0 8rpx 0 currentColor, 0 16rpx 0 currentColor;
+}
+
+.tab-icon-add {
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+}
+
+.tab-icon-add::before {
+  content: '';
+  position: absolute;
+  left: 20rpx;
+  top: 13rpx;
+  width: 3rpx;
+  height: 18rpx;
+  background: currentColor;
+  border-radius: 999rpx;
+}
+
+.tab-icon-add::after {
+  content: '';
+  position: absolute;
+  left: 13rpx;
+  top: 20rpx;
+  width: 18rpx;
+  height: 3rpx;
+  background: currentColor;
+  border-radius: 999rpx;
+}
+
+.tab-icon-medicine::before {
+  content: '';
+  position: absolute;
+  width: 36rpx;
+  height: 18rpx;
+  left: 5rpx;
+  top: 13rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 999rpx;
+  transform: rotate(-35deg);
+}
+
+.tab-icon-medicine::after {
+  content: '';
+  position: absolute;
+  width: 3rpx;
+  height: 17rpx;
+  left: 21rpx;
+  top: 13rpx;
+  background: currentColor;
+  border-radius: 999rpx;
+  transform: rotate(-35deg);
+}
+
+.tab-icon-profile::before {
+  content: '';
+  position: absolute;
+  width: 16rpx;
+  height: 16rpx;
+  left: 14rpx;
+  top: 6rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+}
+
+.tab-icon-profile::after {
+  content: '';
+  position: absolute;
+  width: 30rpx;
+  height: 18rpx;
+  left: 7rpx;
+  top: 25rpx;
+  border: 3rpx solid currentColor;
+  border-bottom: 0;
+  border-radius: 18rpx 18rpx 0 0;
+}
