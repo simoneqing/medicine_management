@@ -19,8 +19,8 @@ Page({
     recordsCalcBaseWeight: 68,
     stats: { total: 0, year: 0 },
     filterMode: 'week',
-    customStart: '2026-03-01',
-    customEnd: '2026-03-31',
+    customStart: '',
+    customEnd: '',
     filteredRecords: [],
     showAddForm: false,
     submitting: false,
@@ -38,7 +38,13 @@ Page({
 
   onLoad(options) {
     const now = new Date();
-    this.setData({ formDate: toDateValue(now), formClock: toTimeValue(now) });
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    this.setData({
+      formDate: toDateValue(now),
+      formClock: toTimeValue(now),
+      customStart: toDateValue(monthStart),
+      customEnd: toDateValue(now)
+    });
     this.loadRecordsFromCache();
     this.initCloudData().then(() => {
       if (options.openAdd === '1') this.openAddForm();

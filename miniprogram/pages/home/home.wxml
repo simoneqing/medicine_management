@@ -7,13 +7,13 @@
 
     <view class="grid-two stats-grid">
     <view class="card stats-card">
-      <view class="card-title">本周用药统计</view>
+      <view class="card-title">近7天用药统计</view>
       <view class="row"><text>用药次数</text><text class="value">{{weeklyStats.count}} 次</text></view>
       <view class="row"><text>总量</text><text class="value">{{weeklyStats.totalDoseIU}} IU</text></view>
     </view>
 
     <view class="card stats-card">
-      <view class="card-title">本月用药统计</view>
+      <view class="card-title">近30天用药统计</view>
       <view class="row"><text>用药次数</text><text class="value">{{monthlyStats.count}} 次</text></view>
       <view class="row"><text>总量</text><text class="value">{{monthlyStats.totalDoseIU}} IU</text></view>
     </view>

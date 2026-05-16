@@ -12,8 +12,8 @@
   <view class="card">
     <view class="label">时间筛选</view>
     <view class="filters">
-      <view class="filter {{filterMode==='week'?'active':''}}" data-mode="week" bindtap="switchFilter">本周</view>
-      <view class="filter {{filterMode==='month'?'active':''}}" data-mode="month" bindtap="switchFilter">本月</view>
+      <view class="filter {{filterMode==='week'?'active':''}}" data-mode="week" bindtap="switchFilter">近7天</view>
+      <view class="filter {{filterMode==='month'?'active':''}}" data-mode="month" bindtap="switchFilter">近30天</view>
       <view class="filter {{filterMode==='custom'?'active':''}}" data-mode="custom" bindtap="switchFilter">自定义</view>
     </view>
     <view wx:if="{{filterMode==='custom'}}" class="custom-wrap">
