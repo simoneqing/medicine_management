@@ -9,6 +9,11 @@ function toDateValue(date) { return `${date.getFullYear()}-${pad(date.getMonth()
 function toTimeValue(date) { return `${pad(date.getHours())}:${pad(date.getMinutes())}`; }
 function calcDoseByCounts(counts) { return Object.entries(counts || {}).reduce((s, [k, v]) => s + Number(k) * Number(v || 0), 0); }
 function calcExpectedRise(total, weight, rr) { return weight <= 0 ? 0 : (total / weight) * rr; }
+function normalizeTimestamp(value) {
+  const ts = Number(value || 0);
+  if (!Number.isFinite(ts) || ts <= 0) return 0;
+  return ts < 1e12 ? ts * 1000 : ts;
+}
 
 Page({
   data: {
@@ -126,16 +131,20 @@ Page({
       rows = direct.data || [];
     }
 
-    const records = rows.map((r) => ({
-      id: r._id,
-      medicineId: r.medicineId,
-      timestamp: Number(r.timestamp),
-      dose: Number(r.dose || 0),
-      counts: r.counts && typeof r.counts === 'object' ? r.counts : {},
-      createdAt: Number(r.createdAt || r.timestamp || 0),
-      expectedRise: Number.isFinite(Number(r.expectedRise)) ? Number(r.expectedRise) : null,
-      weightSnapshot: Number.isFinite(Number(r.weightSnapshot)) ? Number(r.weightSnapshot) : null
-    }));
+    const records = rows.map((r) => {
+      const counts = r.counts && typeof r.counts === 'object' ? r.counts : {};
+      const fromCounts = calcDoseByCounts(counts);
+      return {
+        id: r._id,
+        medicineId: r.medicineId,
+        timestamp: normalizeTimestamp(r.timestamp || r.createdAt),
+        dose: fromCounts > 0 ? fromCounts : Number(r.dose || 0),
+        counts,
+        createdAt: normalizeTimestamp(r.createdAt || r.timestamp),
+        expectedRise: Number.isFinite(Number(r.expectedRise)) ? Number(r.expectedRise) : null,
+        weightSnapshot: Number.isFinite(Number(r.weightSnapshot)) ? Number(r.weightSnapshot) : null
+      };
+    }).filter((r) => r.timestamp > 0);
 
     if (!records.length && this.data.records.length) {
       return;
@@ -161,15 +170,18 @@ Page({
     const rows = [...this.data.records];
     if (this.data.filterMode === 'week') {
       const from = now - 7 * 24 * 3600000;
-      return rows.filter((r) => Number(r.timestamp) >= from);
+      return rows.filter((r) => normalizeTimestamp(r.timestamp) >= from && normalizeTimestamp(r.timestamp) <= now);
     }
     if (this.data.filterMode === 'month') {
       const from = now - 30 * 24 * 3600000;
-      return rows.filter((r) => Number(r.timestamp) >= from);
+      return rows.filter((r) => normalizeTimestamp(r.timestamp) >= from && normalizeTimestamp(r.timestamp) <= now);
     }
     const from = new Date(`${this.data.customStart}T00:00:00`).getTime();
     const to = new Date(`${this.data.customEnd}T23:59:59`).getTime();
-    return rows.filter((r) => Number(r.timestamp) >= from && Number(r.timestamp) <= to);
+    return rows.filter((r) => {
+      const ts = normalizeTimestamp(r.timestamp);
+      return ts >= from && ts <= to;
+    });
   },
 
   refreshStatsAndList() {

@@ -9,6 +9,13 @@ function normalizeTimestamp(value) {
   if (!Number.isFinite(ts) || ts <= 0) return 0;
   return ts < 1e12 ? ts * 1000 : ts;
 }
+function calcDoseByCounts(counts) {
+  return Object.entries(counts || {}).reduce((sum, [spec, count]) => sum + Number(spec) * Number(count || 0), 0);
+}
+function getRecordDose(record = {}) {
+  const fromCounts = calcDoseByCounts(record.counts);
+  return fromCounts > 0 ? fromCounts : Number(record.dose || 0);
+}
 function getDayStartTimestamp(ts) {
   const d = new Date(ts);
   d.setHours(0, 0, 0, 0);
@@ -88,7 +95,7 @@ Page({
       const med = map[record.medicineId] || {};
       const xValue = Number(med.recoveryRate ?? med.xValue ?? 2);
       const halfLife = Math.max(Number(med.halfLife || 24), 0.1);
-      const dose = Number(record.dose || 0);
+      const dose = getRecordDose(record);
       const start = (dose / weight) * xValue;
       total += start * Math.pow(0.5, elapsedHours / halfLife);
     });
@@ -118,7 +125,8 @@ Page({
     const rows = recordsResult.success ? (recordsResult.data?.records || []) : [];
     const records = rows.map((r) => ({
       ...r,
-      timestamp: normalizeTimestamp(r.timestamp || r.createdAt)
+      timestamp: normalizeTimestamp(r.timestamp || r.createdAt),
+      dose: getRecordDose(r)
     })).filter((r) => r.timestamp > 0);
 
     const now = Date.now();
@@ -131,11 +139,11 @@ Page({
     updates.medicineMap = medicineMap;
     updates.weeklyStats = {
       count: weekRows.length,
-      totalDoseIU: Number(weekRows.reduce((sum, r) => sum + Number(r.dose || 0), 0).toFixed(2))
+      totalDoseIU: Number(weekRows.reduce((sum, r) => sum + getRecordDose(r), 0).toFixed(2))
     };
     updates.monthlyStats = {
       count: monthRows.length,
-      totalDoseIU: Number(monthRows.reduce((sum, r) => sum + Number(r.dose || 0), 0).toFixed(2))
+      totalDoseIU: Number(monthRows.reduce((sum, r) => sum + getRecordDose(r), 0).toFixed(2))
     };
     const weekdayMap = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
     updates.recentRecords = [...records]
@@ -146,7 +154,7 @@ Page({
         const dt = new Date(Number(r.timestamp));
         const specText = r.counts && typeof r.counts === 'object' && Object.keys(r.counts).length
           ? Object.entries(r.counts).filter(([, c]) => Number(c || 0) > 0).map(([s, c]) => `${s}IU×${c}`).join(' + ')
-          : `${Number(r.dose || 0).toFixed(0)}IU`;
+          : `${getRecordDose(r).toFixed(0)}IU`;
         return {
           id: r._id || `${r.timestamp}-${r.medicineId}`,
           specText,
@@ -230,7 +238,7 @@ Page({
           if (!ts || ts > dayStartMs) return;
           const med = medicineMap[r.medicineId] || {};
           const halfLife = Math.max(Number(med.halfLife || 24), 0.1);
-          const dose = Math.max(Number(r.dose || 0), 0);
+          const dose = Math.max(getRecordDose(r), 0);
           if (dose <= 0) return;
           weightedHalfLife += halfLife * dose;
           weightTotal += dose;

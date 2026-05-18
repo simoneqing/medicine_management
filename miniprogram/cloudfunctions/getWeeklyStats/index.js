@@ -13,8 +13,11 @@ exports.main = async (event) => {
   const rangeMs = days * 24 * 60 * 60 * 1000;
   const fromTs = now - rangeMs;
 
+  const _ = db.command;
   const res = await db.collection('medRecords')
-    .where({ userId })
+    .where({ userId, timestamp: _.exists(true) })
+    .orderBy('timestamp', 'desc')
+    .limit(1000)
     .get();
 
   const normalizeTs = (row = {}) => {
@@ -24,14 +27,21 @@ exports.main = async (event) => {
     if (Number.isFinite(createdAt) && createdAt > 0) return createdAt < 1e12 ? createdAt * 1000 : createdAt;
     return 0;
   };
+  const calcDoseByCounts = (counts = {}) => Object.entries(counts || {})
+    .reduce((sum, [spec, count]) => sum + Number(spec) * Number(count || 0), 0);
+  const getDose = (row = {}) => {
+    const fromCounts = calcDoseByCounts(row.counts);
+    return fromCounts > 0 ? fromCounts : Number(row.dose || 0);
+  };
 
   const normalized = (res.data || []).map((row) => ({
     ...row,
-    _tsMs: normalizeTs(row)
+    _tsMs: normalizeTs(row),
+    _dose: getDose(row)
   }));
 
   const inRange = normalized.filter((row) => row._tsMs >= fromTs);
-  const totalDoseIU = inRange.reduce((sum, row) => sum + Number(row.dose || 0), 0);
+  const totalDoseIU = inRange.reduce((sum, row) => sum + Number(row._dose || 0), 0);
 
   const data = {
     totalDoses: inRange.length,
@@ -48,7 +58,7 @@ exports.main = async (event) => {
       _id: r._id,
       userId: r.userId,
       medicineId: r.medicineId,
-      dose: Number(r.dose || 0),
+      dose: Number(r._dose || 0),
       timestamp: Number(r._tsMs || 0),
       counts: r.counts && typeof r.counts === 'object' ? r.counts : {},
       createdAt: Number(normalizeTs({ timestamp: r.createdAt, createdAt: r.timestamp }) || r._tsMs || 0),
